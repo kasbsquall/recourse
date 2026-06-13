@@ -93,6 +93,7 @@ SUPPORTING_DOCS = [
     {
         "type": "police_report",
         "ref": "FHP-2024-10153",
+        "url": "/docs/FHP-2024-10153.html",
         "summary": (
             "Collision with guardrail on I-95. Witness confirms vehicle was in motion "
             "when guardrail contact occurred. Engine failure documented post-impact."
@@ -101,6 +102,7 @@ SUPPORTING_DOCS = [
     {
         "type": "mechanic_report",
         "ref": "BM-AUTO-2024-089",
+        "url": "/docs/BM-AUTO-2024-089.html",
         "summary": (
             "Engine seized due to catastrophic impact damage to oil pan and crankshaft. "
             "Failure consistent with high-force collision, not pre-existing mechanical issue."
@@ -109,6 +111,7 @@ SUPPORTING_DOCS = [
     {
         "type": "photos",
         "ref": "CLM-2024-04471-imgs",
+        "url": "/docs/CLM-2024-04471-photos.html",
         "summary": (
             "12 photos showing front-end crushing consistent with 35mph guardrail impact."
         ),

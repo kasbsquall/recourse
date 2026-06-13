@@ -62,4 +62,5 @@ export interface SupportingDoc {
   type: string;
   ref: string;
   summary: string;
+  url?: string;
 }

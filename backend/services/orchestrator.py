@@ -34,8 +34,11 @@ TURNS: list[tuple[str, str, str]] = [
 # Per-turn wait tuning. Agents hand off to each other directly via @mention (primary
 # trigger); the backend only re-nudges as a safety net if a turn stalls.
 _POLL_SECONDS = 3
-_WINDOW_SECONDS = 32      # wait for the agent-to-agent handoff before the backend steps in
-_MAX_RETRIES = 2         # safety-net re-nudge attempts per turn
+# Window must exceed the agents' idle_resync (12s) so a missed-WS handoff self-recovers before
+# the backend gives up. Fast turns still return early (the poll loop exits as soon as a reply
+# appears), so this only extends patience for stalled turns.
+_WINDOW_SECONDS = 40
+_MAX_RETRIES = 1         # one safety-net re-nudge, then move on
 
 
 def build_case_brief(claim: Claim) -> str:
@@ -150,7 +153,8 @@ async def run_debate(claim_id: uuid.UUID) -> None:
 
         brief = build_case_brief(claim)
         opening_id = await room.post_initial_claim(room_id, brief)
-        await _persist(session, claim_id, opening_id, "human_officer", "Claims Officer", brief, "case_file")
+        # The Coordinator (5th agent) opens the case by posting the case file and @mentioning Blake.
+        await _persist(session, claim_id, opening_id, "coordinator", "Coordinator", brief, "case_file")
 
         context: list[tuple[str, str]] = [("Case File", brief)]
         seen: set[str] = {opening_id}

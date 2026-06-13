@@ -27,11 +27,16 @@ if os.getenv("LC_DEBUG"):
 
     set_debug(True)
 
-from band import Agent, AgentConfig
+from band import Agent, AgentConfig, SessionConfig
 from band.adapters import LangGraphAdapter
 from langchain_openai import ChatOpenAI
 
 from config import settings
+
+# If a Band WebSocket event (e.g. "you were @mentioned") is missed, the agent recovers it on
+# this interval. Default 60s caused long dead-air when a handoff event dropped; 12s makes the
+# debate recover fast and reliably without changing models.
+_SESSION = SessionConfig(idle_resync_seconds=12.0)
 
 
 def build_llm(provider: str) -> ChatOpenAI:
@@ -102,6 +107,7 @@ def create_band_agent(
         # Don't re-sync every historical room on startup — only handle rooms the agent
         # is actively added to. Keeps the runtime focused on the live debate.
         config=AgentConfig(auto_subscribe_existing_rooms=False),
+        session_config=_SESSION,
     )
 
 

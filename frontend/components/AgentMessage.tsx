@@ -1,6 +1,10 @@
-import { getAgent, textOn } from "@/lib/agents";
+import { AGENTS, getAgent, textOn } from "@/lib/agents";
 import type { Message } from "@/lib/types";
 import AgentAvatar from "./AgentAvatar";
+
+const NAME_HEX: Record<string, string> = Object.fromEntries(
+  Object.values(AGENTS).map((a) => [a.name.toLowerCase(), a.hex]),
+);
 
 function FormattedContent({ text, hex }: { text: string; hex: string }) {
   const lines = text.split("\n");
@@ -8,7 +12,9 @@ function FormattedContent({ text, hex }: { text: string; hex: string }) {
     <div className="space-y-1.5 text-[15px] leading-relaxed">
       {lines.map((line, i) => {
         if (!line.trim()) return <div key={i} className="h-1" />;
-        const parts = line.split(/(\*\*[^*]+\*\*|§\s?\d+\.\d+)/g).filter(Boolean);
+        const parts = line
+          .split(/(\*\*[^*]+\*\*|§\s?\d+\.\d+|@[A-Za-z]+)/g)
+          .filter(Boolean);
         return (
           <p key={i}>
             {parts.map((p, j) => {
@@ -28,6 +34,18 @@ function FormattedContent({ text, hex }: { text: string; hex: string }) {
                     {p}
                   </span>
                 );
+              if (p.startsWith("@") && NAME_HEX[p.slice(1).toLowerCase()]) {
+                const mh = NAME_HEX[p.slice(1).toLowerCase()];
+                return (
+                  <span
+                    key={j}
+                    className="mx-0.5 px-1.5 text-[13px] font-bold"
+                    style={{ background: mh, color: textOn(mh), border: "1.5px solid var(--ink)" }}
+                  >
+                    {p}
+                  </span>
+                );
+              }
               return <span key={j}>{p}</span>;
             })}
           </p>

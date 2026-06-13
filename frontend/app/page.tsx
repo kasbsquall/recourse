@@ -62,7 +62,15 @@ export default function Dashboard() {
               <span className="font-extrabold">is</span> the audit trail.
             </p>
           </div>
-          <div className="flex gap-3">
+          <div className="flex flex-col items-start gap-3 md:items-end">
+            <Link
+              href="/new-claim"
+              className="brut-hover uppercase-mono px-4 py-2 text-[12px] font-bold"
+              style={{ background: "var(--signal)", border: "2.5px solid var(--ink)", boxShadow: "var(--shadow-sm)" }}
+            >
+              + New Claim
+            </Link>
+            <div className="flex gap-3">
             {ROSTER.map((slug) => {
               const a = getAgent(slug);
               return (
@@ -72,6 +80,7 @@ export default function Dashboard() {
                 </div>
               );
             })}
+            </div>
           </div>
         </div>
 

@@ -133,15 +133,34 @@ export default function ClaimRoom() {
                 <div className="uppercase-mono mb-3 text-[10px] font-bold text-[var(--muted)]">
                   Supporting Documents
                 </div>
-                <ul className="space-y-3">
-                  {claim.supporting_docs.map((d) => (
-                    <li key={d.ref} className="border-l-[3px] border-[var(--ink)] pl-3 text-sm">
-                      <div className="font-mono text-[11px] font-bold">
-                        {d.type} · {d.ref}
-                      </div>
-                      <div className="text-[var(--muted)]">{d.summary}</div>
-                    </li>
-                  ))}
+                <ul className="space-y-2.5">
+                  {claim.supporting_docs.map((d) => {
+                    const inner = (
+                      <>
+                        <div className="font-mono flex items-center gap-1.5 text-[11px] font-bold">
+                          {d.type} · {d.ref}
+                          {d.url && <span className="text-[var(--accent)]">↗ view</span>}
+                        </div>
+                        <div className="text-[var(--muted)]">{d.summary}</div>
+                      </>
+                    );
+                    return d.url ? (
+                      <li key={d.ref}>
+                        <a
+                          href={d.url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="brut-hover block border-l-[3px] border-[var(--ink)] bg-[var(--paper-2)] py-2 pl-3 pr-2 text-sm"
+                        >
+                          {inner}
+                        </a>
+                      </li>
+                    ) : (
+                      <li key={d.ref} className="border-l-[3px] border-[var(--ink)] pl-3 text-sm">
+                        {inner}
+                      </li>
+                    );
+                  })}
                 </ul>
               </div>
             )}

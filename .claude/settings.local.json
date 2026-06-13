@@ -5,7 +5,8 @@
       "Bash(mv .venv-agents .venv)",
       "Bash(./.venv/Scripts/python.exe --version)",
       "Bash(./.venv/Scripts/python.exe -c \"import band, fastapi, sqlalchemy, sentence_transformers, langchain_openai, pgvector; from band.client.rest import AsyncRestClient; print\\('imports OK'\\)\")",
-      "Bash(./.venv/Scripts/python.exe -m uvicorn --version)"
+      "Bash(./.venv/Scripts/python.exe -m uvicorn --version)",
+      "Bash(powershell -NoProfile -Command 'Get-CimInstance Win32_Process | Where-Object { $_.Name -eq '\\\\''node.exe'\\\\'' -and $_.CommandLine -like '\\\\''*hackathon-band*'\\\\'' } | ForEach-Object { & taskkill /F /PID $_.ProcessId /T 2>&1 | Out-Null }')"
     ]
   }
 }

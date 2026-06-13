@@ -1,5 +1,5 @@
 /** API client for the Recourse FastAPI backend. */
-import type { Claim, ClaimDetail, Message } from "./types";
+import type { Claim, ClaimDetail, Message, Policy } from "./types";
 
 export const API_BASE =
   process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
@@ -20,6 +20,20 @@ async function post<T>(path: string, body?: unknown): Promise<T> {
   if (!res.ok) throw new Error(`${path} failed: ${res.status}`);
   return res.json();
 }
+
+export interface NewClaimInput {
+  policy_id: string;
+  incident_date: string;
+  incident_type: string;
+  location?: string;
+  incident_description: string;
+  amount_requested: number;
+  original_denial_reason?: string;
+}
+
+export const getPolicies = () => get<Policy[]>("/api/policies");
+export const createClaim = (body: NewClaimInput) =>
+  post<Claim>("/api/claims", body);
 
 export const getClaims = () => get<Claim[]>("/api/claims");
 export const getClaim = (id: string) => get<ClaimDetail>(`/api/claims/${id}`);
