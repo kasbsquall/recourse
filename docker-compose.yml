@@ -1,0 +1,26 @@
+# Local development only. Production uses Supabase (DB) + Railway (backend) + Vercel (frontend).
+# Spins up PostgreSQL 16 with the pgvector extension preinstalled.
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    container_name: recourse-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: recourse
+    ports:
+      # Host 5433 to avoid clashing with a local PostgreSQL already on 5432.
+      - "5433:5432"
+    volumes:
+      - recourse_pgdata:/var/lib/postgresql/data
+      # schema.sql runs automatically on first boot of a fresh volume
+      - ./backend/database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d recourse"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  recourse_pgdata:
