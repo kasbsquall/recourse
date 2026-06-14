@@ -1,0 +1,307 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Recourse — Technical Deck</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;800;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --bg:#e9e6dd; --ink:#0e0e0e; --paper:#fff; --paper2:#f3f1ea; --muted:#6b6a63;
+    --signal:#f5d90a;
+    --coord:#0e7490; --blake:#2d5bff; --morgan:#7c3aed; --alex:#dc2626; --sam:#15803d;
+    --shadow:5px 5px 0 var(--ink); --shadow-sm:3px 3px 0 var(--ink);
+    --display:"Archivo","Arial Black",sans-serif; --mono:"Space Mono","Courier New",monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:#555}
+  .slide{
+    position:relative; width:1280px; height:720px; overflow:hidden;
+    background:var(--bg); color:var(--ink);
+    background-image:radial-gradient(var(--ink) 0.6px,transparent 0.6px);
+    background-size:22px 22px;
+    font-family:var(--display); padding:64px 72px;
+    display:flex; flex-direction:column;
+    page-break-after:always;
+  }
+  .slide.dark{
+    background:#0b0b0c; color:#f5f5f7;
+    background-image:radial-gradient(rgba(255,255,255,.07) 0.7px,transparent 0.7px);
+  }
+  .eyebrow{font-family:var(--mono);font-weight:700;text-transform:uppercase;
+    letter-spacing:.14em;font-size:15px;color:var(--coord)}
+  .dark .eyebrow{color:#3bc6e6}
+  h1{font-family:var(--display);font-weight:900;letter-spacing:-.025em;line-height:1.0}
+  .kicker{font-weight:800;letter-spacing:-.01em}
+  .muted{color:var(--muted)} .dark .muted{color:#9a9aa3}
+  .mono{font-family:var(--mono)}
+  .brut{background:var(--paper);border:2.5px solid var(--ink);box-shadow:var(--shadow)}
+  .brut-flat{background:var(--paper);border:2.5px solid var(--ink)}
+  .dark .brut,.dark .brut-flat{background:#141417;border-color:#2a2a31;box-shadow:none}
+  .row{display:flex;gap:18px}
+  .grow{flex:1}
+  .footer{position:absolute;left:72px;right:72px;bottom:30px;display:flex;
+    justify-content:space-between;font-family:var(--mono);font-size:12.5px;
+    letter-spacing:.08em;color:var(--muted);text-transform:uppercase}
+  .dark .footer{color:#71717a}
+  .tag{display:inline-block;font-family:var(--mono);font-size:13px;font-weight:700;
+    border:2px solid var(--ink);padding:7px 13px;background:var(--paper)}
+  .dark .tag{border-color:#3a3a42;background:#141417;color:#d4d4d8}
+  .chip{font-family:var(--mono);font-size:12.5px;border:2px solid var(--ink);
+    padding:5px 11px;background:var(--paper);white-space:nowrap}
+  .barlabel{font-family:var(--mono);font-weight:700;text-transform:uppercase;
+    letter-spacing:.1em;font-size:12px;padding:4px 10px;color:#fff;display:inline-block}
+  /* pipeline */
+  .pipe{display:flex;align-items:stretch;gap:0;margin-top:34px}
+  .node{flex:1;background:var(--paper);border:2.5px solid var(--ink);box-shadow:var(--shadow-sm);
+    padding:16px 15px 18px}
+  .arrow{display:flex;align-items:center;font-weight:900;font-size:30px;padding:0 9px;color:var(--ink)}
+  .node .role{font-family:var(--mono);font-weight:700;text-transform:uppercase;
+    letter-spacing:.08em;font-size:11px}
+  .node .nm{font-size:21px;font-weight:900;margin:7px 0 6px}
+  .node .du{font-size:13px;line-height:1.32;color:var(--muted)}
+  .node .swatch{width:30px;height:6px;margin-bottom:11px}
+  /* stat cards */
+  .stat{flex:1;background:var(--paper);border:2.5px solid var(--ink);box-shadow:var(--shadow);
+    padding:18px 22px}
+  .stat .n{font-size:50px;font-weight:900;line-height:.95;letter-spacing:-.03em}
+  .stat .c{font-family:var(--mono);font-size:13px;color:var(--muted);margin-top:8px;line-height:1.28}
+  .stat .u{height:4px;width:46px;background:var(--signal);margin:9px 0}
+  /* numbered flow */
+  .step{flex:1;background:var(--paper);border:2.5px solid var(--ink);box-shadow:var(--shadow-sm);padding:15px 14px}
+  .step .k{font-family:var(--mono);font-weight:700;font-size:13px;color:var(--coord)}
+  .step .t{font-size:17px;font-weight:900;margin:8px 0 5px;line-height:1.05}
+  .step .d{font-size:12px;color:var(--muted);line-height:1.3}
+  .bullets{list-style:none;margin-top:20px}
+  .bullets li{position:relative;padding-left:26px;margin-bottom:13px;font-size:18px;
+    font-weight:600;line-height:1.32;max-width:760px}
+  .bullets li::before{content:"";position:absolute;left:0;top:5px;width:9px;height:24px;
+    background:var(--signal);border:2px solid var(--ink)}
+  .shot{border:2.5px solid var(--ink);box-shadow:var(--shadow);display:block;width:100%}
+  .logo{display:block}
+  /* architecture */
+  .arch{display:flex;flex-direction:column;gap:14px;margin-top:22px}
+  .lane{display:flex;align-items:center;gap:10px}
+  .box{flex:1 1 0;min-width:0;background:var(--paper);border:2.5px solid var(--ink);
+    box-shadow:var(--shadow-sm);padding:11px 14px;font-weight:800;font-size:14.5px;line-height:1.15}
+  .box .s{font-family:var(--mono);font-weight:400;font-size:11px;color:var(--muted);display:block;margin-top:3px}
+  .conn{flex:0 0 auto;font-family:var(--mono);font-size:11px;color:var(--muted);font-weight:700;white-space:nowrap}
+</style>
+</head>
+<body>
+
+<!-- 1 · TITLE -->
+<section class="slide dark" style="justify-content:center">
+  <div style="position:absolute;top:60px;left:72px" class="eyebrow">Band of Agents Hackathon · lablab.ai</div>
+  <div style="position:absolute;top:60px;right:72px" class="eyebrow">Track 3 — Regulated &amp; High-Stakes</div>
+  <div class="logo" style="width:760px;margin:0 auto"><!--LOGO_LIGHT--></div>
+  <div style="text-align:center;margin-top:30px;font-size:30px;font-weight:800;letter-spacing:-.01em">
+    Adversarial Claims Adjudication
+  </div>
+  <div class="muted" style="text-align:center;margin-top:16px;font-size:18px;max-width:740px;margin-left:auto;margin-right:auto;line-height:1.45">
+    Five AI agents put every disputed insurance claim on trial — and the debate
+    <em>becomes</em> the legally-defensible audit trail.
+  </div>
+  <div style="display:flex;gap:14px;justify-content:center;margin-top:34px">
+    <span class="tag">recourseband.duckdns.org</span>
+    <span class="tag">Live in production</span>
+    <span class="tag">5 Band agents</span>
+  </div>
+</section>
+
+<!-- 2 · PROBLEM -->
+<section class="slide">
+  <div class="eyebrow" style="color:var(--alex)">The Problem</div>
+  <h1 style="font-size:46px;margin-top:10px;max-width:1000px">
+    A denied claim. A dispute.<br/>And no record of how the call was made.
+  </h1>
+  <ul class="bullets" style="margin-top:18px">
+    <li>Appeals are decided by one overworked reviewer, under time pressure, with no one arguing the other side.</li>
+    <li>The reasoning lives in someone's head — not on paper. Regulators and customers can't see <em>why</em>.</li>
+    <li>When a decision is challenged months later, there is no defensible trail to stand behind.</li>
+  </ul>
+  <div class="row" style="margin-top:auto;margin-bottom:26px">
+    <div class="stat"><div class="n">1</div><div class="u"></div><div class="c">reviewer per appeal — no adversary, no second lens</div></div>
+    <div class="stat"><div class="n">Hours</div><div class="u"></div><div class="c">of manual policy cross-referencing per case</div></div>
+    <div class="stat"><div class="n">Zero</div><div class="u"></div><div class="c">structured audit trail of the reasoning</div></div>
+  </div>
+  <div class="footer"><span>Recourse — Adversarial Claims Adjudication</span><span>02 / 09</span></div>
+</section>
+
+<!-- 3 · SOLUTION / PIPELINE -->
+<section class="slide">
+  <div class="eyebrow" style="color:var(--sam)">The Solution</div>
+  <h1 style="font-size:50px;margin-top:14px;max-width:1040px">Five specialists put every claim on trial.</h1>
+  <p class="muted" style="font-size:18px;margin-top:16px;max-width:900px;line-height:1.45">
+    A Coordinator convenes four specialist agents in a single Band room. Each owns one job.
+    They argue in the open, hand off to one another, and converge on a resolution — with a
+    human officer holding the final word.
+  </p>
+  <div class="pipe">
+    <div class="node"><div class="swatch" style="background:var(--coord)"></div>
+      <div class="role" style="color:var(--coord)">Coordinator</div>
+      <div class="nm">Opens the case</div>
+      <div class="du">Parses the claim, convenes the room, routes each handoff.</div></div>
+    <div class="arrow">→</div>
+    <div class="node"><div class="swatch" style="background:var(--blake)"></div>
+      <div class="role" style="color:var(--blake)">Blake</div>
+      <div class="nm">Argues merits</div>
+      <div class="du">Claims Evaluator — builds the case <em>for</em> the insured.</div></div>
+    <div class="arrow">→</div>
+    <div class="node"><div class="swatch" style="background:var(--morgan)"></div>
+      <div class="role" style="color:var(--morgan)">Morgan</div>
+      <div class="nm">Maps policy</div>
+      <div class="du">Policy Analyst — cites the exact clauses that govern.</div></div>
+    <div class="arrow">→</div>
+    <div class="node"><div class="swatch" style="background:var(--alex)"></div>
+      <div class="role" style="color:var(--alex)">Alex</div>
+      <div class="nm">Challenges</div>
+      <div class="du">Devil's Advocate — fights to deny, so nothing is missed.</div></div>
+    <div class="arrow">→</div>
+    <div class="node"><div class="swatch" style="background:var(--sam)"></div>
+      <div class="role" style="color:var(--sam)">Sam</div>
+      <div class="nm">Notarizes</div>
+      <div class="du">Resolution Notary — writes the final, signed record.</div></div>
+  </div>
+  <div class="footer"><span>Recourse — Adversarial Claims Adjudication</span><span>03 / 09</span></div>
+</section>
+
+<!-- 4 · HOW A VERDICT IS REACHED -->
+<section class="slide">
+  <div class="eyebrow">How it works</div>
+  <h1 style="font-size:48px;margin-top:14px">How a verdict is reached.</h1>
+  <div class="row" style="margin-top:30px">
+    <div class="step"><div class="k">01</div><div class="t">Intake</div><div class="d">Coordinator opens the case &amp; loads the policy.</div></div>
+    <div class="step"><div class="k">02</div><div class="t">Argue</div><div class="d">Blake makes the case for paying the claim.</div></div>
+    <div class="step"><div class="k">03</div><div class="t">Policy</div><div class="d">Morgan cites the governing clauses (RAG).</div></div>
+    <div class="step"><div class="k">04</div><div class="t">Challenge</div><div class="d">Alex attacks the weakest points to deny.</div></div>
+    <div class="step"><div class="k">05</div><div class="t">Compile</div><div class="d">Coordinator assembles the full record + math.</div></div>
+    <div class="step"><div class="k">06</div><div class="t">Notarize</div><div class="d">Sam writes the signed, reasoned resolution.</div></div>
+    <div class="step"><div class="k">07</div><div class="t">Sign-off</div><div class="d">A human officer approves — or overrides.</div></div>
+  </div>
+  <div class="brut" style="margin-top:34px;padding:24px 28px;background:var(--signal);box-shadow:var(--shadow)">
+    <div class="mono" style="font-weight:700;font-size:13px;letter-spacing:.1em;text-transform:uppercase">The key idea</div>
+    <div style="font-size:27px;font-weight:900;margin-top:8px;letter-spacing:-.01em">
+      The conversation <em>is</em> the audit trail. Every message is persisted, ordered, and hashed.
+    </div>
+  </div>
+  <div class="footer"><span>Recourse — Adversarial Claims Adjudication</span><span>04 / 09</span></div>
+</section>
+
+<!-- 5 · ARCHITECTURE -->
+<section class="slide">
+  <div class="eyebrow">Architecture</div>
+  <h1 style="font-size:46px;margin-top:14px">One room. A streaming spine. A durable record.</h1>
+  <div class="arch">
+    <div class="lane">
+      <div class="box" style="min-width:190px">Next.js 14 — App Router<span class="s">Dashboard · live debate room · resolution</span></div>
+      <span class="conn">— SSE live stream →</span>
+      <div class="box" style="min-width:190px">FastAPI — Orchestrator<span class="s">Coordinator-driven turn engine</span></div>
+      <span class="conn">↕</span>
+      <div class="box grow">PostgreSQL + pgvector<span class="s">Claims, transcript, clause embeddings (RAG)</span></div>
+    </div>
+    <div class="lane" style="padding-left:0">
+      <div class="box" style="background:var(--paper2)">Band — 5 Agents<span class="s">Coordinator · Blake · Morgan · Alex · Sam · @mention routing</span></div>
+      <span class="conn">model providers →</span>
+      <div class="box">AI/ML API — GPT-4o<span class="s">Blake · Morgan · Sam</span></div>
+      <div class="box">Featherless — Hermes-2-Pro<span class="s">Alex (GPT-4o failover)</span></div>
+    </div>
+  </div>
+  <div class="row" style="margin-top:24px;flex-wrap:wrap;gap:12px">
+    <span class="chip">Deployed: Docker Compose on VPS</span>
+    <span class="chip">OpenLiteSpeed reverse proxy · Let's Encrypt TLS</span>
+    <span class="chip">SSE un-buffered (respBuffer 0)</span>
+    <span class="chip">all-MiniLM-L6-v2 · 384-dim cosine</span>
+  </div>
+  <div class="footer"><span>Recourse — Adversarial Claims Adjudication</span><span>05 / 09</span></div>
+</section>
+
+<!-- 6 · WHY DEFENSIBLE (audit trail) -->
+<section class="slide">
+  <div class="row" style="gap:34px;height:100%;align-items:stretch">
+    <div style="flex:1.05;display:flex;flex-direction:column">
+      <div class="eyebrow" style="color:var(--morgan)">Why it's defensible</div>
+      <h1 style="font-size:42px;margin-top:14px">Built to survive a regulator.</h1>
+      <ul class="bullets" style="margin-top:22px">
+        <li>Every clause is <strong>cited by number</strong> — §7.3, §12.1 — not paraphrased.</li>
+        <li>The full transcript is <strong>SHA-256 hashed</strong> — tamper-evident on the record.</li>
+        <li>Payout is deterministic: <span class="mono">payable = claim − deductible</span>, clamped at zero.</li>
+        <li>The human officer can <strong>approve or override</strong> — accountability stays human.</li>
+      </ul>
+    </div>
+    <div style="flex:1;display:flex;align-items:center">
+      <img class="shot" src="shots/resolution.png" alt="Resolution panel" />
+    </div>
+  </div>
+  <div class="footer"><span>Recourse — Adversarial Claims Adjudication</span><span>06 / 09</span></div>
+</section>
+
+<!-- 7 · LIVE PRODUCT -->
+<section class="slide">
+  <div class="eyebrow" style="color:var(--blake)">Live product</div>
+  <h1 style="font-size:44px;margin-top:14px">Real agents. Real debate. Live in the cloud.</h1>
+  <div class="row" style="margin-top:26px;gap:26px">
+    <div style="flex:1">
+      <img class="shot" src="shots/dashboard.png" alt="Dashboard" />
+      <div class="mono muted" style="font-size:13px;margin-top:10px">Dashboard — case docket &amp; the standing panel</div>
+    </div>
+    <div style="flex:1">
+      <img class="shot" src="shots/debate.png" alt="Adjudication room" />
+      <div class="mono muted" style="font-size:13px;margin-top:10px">Adjudication room — the debate streams live (SSE)</div>
+    </div>
+  </div>
+  <div class="row" style="margin-top:auto;margin-bottom:24px">
+    <span class="tag" style="background:var(--signal)">Try it: recourseband.duckdns.org</span>
+  </div>
+  <div class="footer"><span>Recourse — Adversarial Claims Adjudication</span><span>07 / 09</span></div>
+</section>
+
+<!-- 8 · TECH + BAND INTEGRATION -->
+<section class="slide">
+  <div class="eyebrow">Stack &amp; Band integration</div>
+  <h1 style="font-size:44px;margin-top:14px">How we use Band — and the partner stack.</h1>
+  <div class="row" style="margin-top:26px;gap:18px">
+    <div class="brut grow" style="padding:22px 24px">
+      <div class="barlabel" style="background:var(--coord)">Band coordination</div>
+      <ul style="list-style:none;margin-top:14px;font-size:15.5px;line-height:1.5">
+        <li>• 5 agents in one room via the <strong>Agent API</strong></li>
+        <li>• Visibility model respected — agents act on <strong>@mentions</strong></li>
+        <li>• Structured <strong>agent-to-agent handoffs</strong> drive the turn order</li>
+        <li>• The room transcript is the system of record</li>
+      </ul>
+    </div>
+    <div class="brut grow" style="padding:22px 24px">
+      <div class="barlabel" style="background:var(--morgan)">Retrieval &amp; reasoning</div>
+      <ul style="list-style:none;margin-top:14px;font-size:15.5px;line-height:1.5">
+        <li>• Policy clauses embedded with <strong>MiniLM</strong> (384-dim)</li>
+        <li>• <strong>pgvector</strong> cosine search grounds every citation</li>
+        <li>• GPT-4o for Blake · Morgan · Sam</li>
+        <li>• Hermes-2-Pro (Featherless) for Alex, GPT-4o failover</li>
+      </ul>
+    </div>
+  </div>
+  <div class="row" style="margin-top:24px;flex-wrap:wrap;gap:12px">
+    <span class="chip">Band SDK</span><span class="chip">AI/ML API</span><span class="chip">Featherless AI</span>
+    <span class="chip">FastAPI · async SQLAlchemy</span><span class="chip">Next.js 14 · TypeScript · Tailwind</span>
+    <span class="chip">Postgres 16 · pgvector</span><span class="chip">Docker · OpenLiteSpeed</span>
+  </div>
+  <div class="footer"><span>Recourse — Adversarial Claims Adjudication</span><span>08 / 09</span></div>
+</section>
+
+<!-- 9 · CLOSE -->
+<section class="slide dark" style="justify-content:center;align-items:center;text-align:center">
+  <div class="logo" style="width:640px"><!--LOGO_LIGHT--></div>
+  <div style="height:4px;width:120px;background:var(--signal);margin:34px auto 0"></div>
+  <div style="font-size:30px;font-weight:800;margin-top:30px">Every claim deserves a fair fight.</div>
+  <div class="muted" style="font-size:18px;margin-top:14px;max-width:680px;line-height:1.45">
+    Adversarial adjudication, on the record — and live in production today.
+  </div>
+  <div style="display:flex;gap:14px;justify-content:center;margin-top:32px">
+    <span class="tag">recourseband.duckdns.org</span>
+    <span class="tag">Built for the Band of Agents Hackathon</span>
+  </div>
+</section>
+
+</body>
+</html>

@@ -29,3 +29,13 @@ Thumbs.db
 
 # --- Sentence-transformers model cache (optional, large) ---
 .cache/
+
+# --- Media build artifacts (regenerable from the scripts) ---
+deck/preview/
+deck/preview_v2/
+deck/preview_v3/
+deck/*_built.html
+video/final_video.mp4
+video/product_cut.mp4
+video/mixed.m4a
+video/__pycache__/
