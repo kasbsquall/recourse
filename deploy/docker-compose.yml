@@ -48,6 +48,10 @@ services:
   caddy:
     image: caddy:2-alpine
     restart: unless-stopped
+    # Exposed on localhost only so the host's OpenLiteSpeed (CyberPanel) reverse-proxies the
+    # public domain to it. Not published to 0.0.0.0 — no direct external access.
+    ports:
+      - "127.0.0.1:8080:8080"
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
     depends_on:
