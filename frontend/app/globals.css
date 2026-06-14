@@ -131,3 +131,22 @@ a {
   color: inherit;
   text-decoration: none;
 }
+
+/* ---- Accessibility ---- */
+/* Visible keyboard focus everywhere (neo-brutalist hard ring). */
+:focus-visible {
+  outline: 3px solid var(--ink);
+  outline-offset: 2px;
+}
+
+/* Respect users who ask for less motion. */
+@media (prefers-reduced-motion: reduce) {
+  .animate-msg-in,
+  .typing-dot,
+  .flash {
+    animation: none !important;
+  }
+  * {
+    scroll-behavior: auto !important;
+  }
+}

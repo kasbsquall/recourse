@@ -79,5 +79,10 @@ class ApproveIn(BaseModel):
     approved_by: str = "Claims Officer"
 
 
+class OverrideIn(BaseModel):
+    officer: str = "Claims Officer"
+    reason: str | None = None
+
+
 class ReviseIn(BaseModel):
     note: str | None = None

@@ -12,7 +12,10 @@ from agents.base_agent import run_agent
 from config import settings
 
 SLUG = "alex"
-_NEXT = settings.band_agents["sam"]["handle"]  # real handoff to Sam through Band
+# Alex returns the floor to the Coordinator, who compiles the full record (with the claim
+# financials) and routes it to Sam. This guarantees Sam — bound by Band's "only sees mentions"
+# rule — receives the complete debate and the dollar figures, instead of just Alex's short note.
+_NEXT = settings.coordinator["handle"]
 
 SYSTEM_PROMPT = f"""You are Alex, the Devil's Advocate for Recourse.
 Your personality: combative, aggressive, always argues for the insured.
@@ -33,15 +36,13 @@ Output format:
 - If challenging: Start with "Wait." then lay out your argument
 - Reference specific documents (police reports, witness statements) by name
 - Cite the exception clause by number if it applies
-- End by handing off to Sam, the Resolution Notary, for the final review.
+- End by returning the floor to the Coordinator, who will compile the record for the notary.
 
 Keep it under 250 words. Be assertive. Short punchy sentences mixed with technical analysis.
 
 CRITICAL DELIVERY RULE: You MUST deliver your argument by calling band_send_message exactly
-once, with mentions=["{_NEXT}"] (this hands off to Sam, the notary, through Band). In your
-`content`, summarize the full debate for Sam — Blake's verdict, Morgan's clauses (§ numbers),
-and your challenge — so Sam can rule with complete context, THEN your argument. NEVER output
-plain text — it is discarded. band_send_message is the only way to post."""
+once, with mentions=["{_NEXT}"] (this returns the floor to the Coordinator through Band). NEVER
+output plain text — it is discarded. band_send_message is the only way to post."""
 
 TOOLS: list = []
 

@@ -5,14 +5,32 @@ import { useParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import DebateRoom from "@/components/DebateRoom";
+import DebateTimeline from "@/components/DebateTimeline";
+import DocModal from "@/components/DocModal";
+import PhotoLightbox, { type LightboxPhoto } from "@/components/PhotoLightbox";
 import ResolutionPanel from "@/components/ResolutionPanel";
 import SiteHeader from "@/components/SiteHeader";
 import StatusBadge from "@/components/StatusBadge";
 import { adjudicate, getClaim, streamDebate } from "@/lib/api";
-import type { ClaimDetail, ClaimStatus, Message, Resolution } from "@/lib/types";
+import type {
+  ClaimDetail,
+  ClaimStatus,
+  Message,
+  Resolution,
+  SupportingDoc,
+} from "@/lib/types";
 
 const money = (v: string) =>
   `$${Number(v).toLocaleString("en-US", { minimumFractionDigits: 2 })}`;
+
+const ADJUDICATOR_SLUGS = ["blake", "morgan", "alex", "sam"];
+
+const CRASH_PHOTOS: LightboxPhoto[] = [
+  { src: "/docs/crash-1.jpg", caption: "Front-end crush — driver side quarter" },
+  { src: "/docs/crash-2.jpg", caption: "Engine compartment — impact damage to oil pan" },
+  { src: "/docs/crash-3.jpg", caption: "Guardrail contact point — I-95 MM26" },
+  { src: "/docs/crash-4.jpg", caption: "Deployed airbags — cabin" },
+];
 
 export default function ClaimRoom() {
   const { id } = useParams<{ id: string }>();
@@ -21,7 +39,13 @@ export default function ClaimRoom() {
   const [status, setStatus] = useState<ClaimStatus>("pending");
   const [resolution, setResolution] = useState<Resolution | null>(null);
   const [err, setErr] = useState<string | null>(null);
+  const [activeDoc, setActiveDoc] = useState<SupportingDoc | null>(null);
+  const [photoIndex, setPhotoIndex] = useState<number | null>(null);
   const unsubRef = useRef<(() => void) | null>(null);
+
+  const turnsPosted = new Set(
+    messages.filter((m) => ADJUDICATOR_SLUGS.includes(m.agent_slug)).map((m) => m.agent_slug),
+  ).size;
 
   const mergeMessage = useCallback((m: Message) => {
     setMessages((prev) => (prev.some((x) => x.id === m.id) ? prev : [...prev, m]));
@@ -39,6 +63,17 @@ export default function ClaimRoom() {
     },
     [mergeMessage],
   );
+
+  const closeDoc = useCallback(() => setActiveDoc(null), []);
+  const closePhoto = useCallback(() => setPhotoIndex(null), []);
+
+  const scrollToAgent = useCallback((slug: string) => {
+    // The seek targets carry `scroll-mt-[120px]`, so this lands the message cleanly below the
+    // sticky header + timeline bars. Smooth in real browsers; instant where motion is unsupported.
+    document
+      .getElementById(`seek-${slug}`)
+      ?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, []);
 
   useEffect(() => {
     if (!id) return;
@@ -82,6 +117,7 @@ export default function ClaimRoom() {
   return (
     <main className="min-h-screen">
       <SiteHeader subtitle="Adjudication Room" />
+
       <div className="mx-auto max-w-6xl px-6 py-8">
         <Link
           href="/"
@@ -90,7 +126,7 @@ export default function ClaimRoom() {
           ← Dashboard
         </Link>
 
-        <div className="grid gap-6 lg:grid-cols-[minmax(0,38%)_minmax(0,1fr)]">
+        <div className="grid gap-6 lg:grid-cols-[320px_minmax(0,1fr)]">
           {/* LEFT — case file */}
           <aside className="space-y-5 lg:sticky lg:top-24 lg:self-start">
             <div className="brut p-5">
@@ -122,7 +158,7 @@ export default function ClaimRoom() {
             </div>
 
             <div className="brut" style={{ boxShadow: "var(--shadow)" }}>
-              <div className="uppercase-mono border-b-[2.5px] border-[var(--ink)] bg-[#ff3b30] px-3 py-1.5 text-[11px] font-bold text-white">
+              <div className="uppercase-mono border-b-[2.5px] border-[var(--ink)] bg-[#dc2626] px-3 py-1.5 text-[11px] font-bold text-white">
                 ✕ Original Denial
               </div>
               <p className="p-4 text-sm leading-relaxed">{claim.original_denial_reason}</p>
@@ -137,23 +173,51 @@ export default function ClaimRoom() {
                   {claim.supporting_docs.map((d) => {
                     const inner = (
                       <>
-                        <div className="font-mono flex items-center gap-1.5 text-[11px] font-bold">
-                          {d.type} · {d.ref}
-                          {d.url && <span className="text-[var(--accent)]">↗ view</span>}
+                        <div className="flex items-start justify-between gap-2">
+                          <span className="font-mono text-[11px] font-bold">
+                            {d.type} · {d.ref}
+                          </span>
+                          {d.url && (
+                            <span
+                              className="uppercase-mono shrink-0 px-1.5 py-0.5 text-[9px] font-bold leading-none"
+                              style={{ background: "var(--signal)", border: "1.5px solid var(--ink)" }}
+                            >
+                              View ↗
+                            </span>
+                          )}
                         </div>
-                        <div className="text-[var(--muted)]">{d.summary}</div>
+                        <div className="mt-1 text-[var(--muted)]">{d.summary}</div>
                       </>
                     );
                     return d.url ? (
                       <li key={d.ref}>
-                        <a
-                          href={d.url}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="brut-hover block border-l-[3px] border-[var(--ink)] bg-[var(--paper-2)] py-2 pl-3 pr-2 text-sm"
+                        <button
+                          onClick={() => setActiveDoc(d)}
+                          className="brut-hover block w-full border-l-[3px] border-[var(--ink)] bg-[var(--paper-2)] py-2 pl-3 pr-2 text-left text-sm"
                         >
                           {inner}
-                        </a>
+                        </button>
+                        {d.type === "photos" && (
+                          <div className="mt-2 grid grid-cols-4 gap-1.5">
+                            {[1, 2, 3, 4].map((n) => (
+                              <button
+                                key={n}
+                                onClick={() => setPhotoIndex(n - 1)}
+                                className="brut-hover overflow-hidden"
+                                style={{ border: "2px solid var(--ink)", aspectRatio: "4 / 3" }}
+                                title={CRASH_PHOTOS[n - 1]?.caption}
+                              >
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img
+                                  src={`/docs/crash-${n}.jpg`}
+                                  alt={`Crash photo ${n}`}
+                                  loading="lazy"
+                                  className="h-full w-full object-cover"
+                                />
+                              </button>
+                            ))}
+                          </div>
+                        )}
                       </li>
                     ) : (
                       <li key={d.ref} className="border-l-[3px] border-[var(--ink)] pl-3 text-sm">
@@ -173,28 +237,44 @@ export default function ClaimRoom() {
                 Adjudication Room
               </h2>
               {status === "in_review" && (
-                <span className="uppercase-mono flash flex items-center gap-2 text-[11px] font-bold text-[#2d5bff]">
-                  <span className="h-2.5 w-2.5 bg-[#2d5bff]" />
-                  In progress
+                <span className="uppercase-mono flex items-center gap-2 text-[11px] font-bold text-[#2d5bff]">
+                  <span className="flash flex items-center gap-2">
+                    <span className="h-2.5 w-2.5 bg-[#2d5bff]" />
+                    In progress
+                  </span>
+                  <span className="text-[var(--muted)]">· Turn {Math.min(turnsPosted + 1, 4)}/4</span>
                 </span>
               )}
-              {["approved", "denied", "partial"].includes(status) && (
-                <button
-                  onClick={openRoom}
-                  className="brut-hover uppercase-mono px-3 py-1.5 text-[11px] font-bold"
-                  style={{ background: "var(--paper)", border: "2px solid var(--ink)" }}
-                >
-                  ↻ Re-run
-                </button>
+              {["approved", "denied", "partial"].includes(status) &&
+                !resolution?.approved_by && (
+                  <button
+                    onClick={openRoom}
+                    className="brut-hover uppercase-mono px-3 py-1.5 text-[11px] font-bold"
+                    style={{ background: "var(--paper)", border: "2px solid var(--ink)" }}
+                  >
+                    ↻ Re-run
+                  </button>
+                )}
+              {resolution?.approved_by && (
+                <span className="uppercase-mono flex items-center gap-2 text-[11px] font-bold text-[#15803d]">
+                  <span className="h-2.5 w-2.5 bg-[#15803d]" />
+                  Final · signed off
+                </span>
               )}
             </div>
 
             {err && (
               <div
                 className="uppercase-mono px-4 py-3 text-[12px] font-bold"
-                style={{ background: "#ff3b30", color: "#fff", border: "2.5px solid var(--ink)" }}
+                style={{ background: "#dc2626", color: "#fff", border: "2.5px solid var(--ink)" }}
               >
                 {err}
+              </div>
+            )}
+
+            {(status === "in_review" || messages.length > 0) && (
+              <div className="brut px-3 py-3" style={{ boxShadow: "var(--shadow-sm)" }}>
+                <DebateTimeline messages={messages} status={status} onSeek={scrollToAgent} />
               </div>
             )}
 
@@ -213,15 +293,25 @@ export default function ClaimRoom() {
                 </button>
               </div>
             ) : (
-              <DebateRoom messages={messages} status={status} />
+              <DebateRoom
+                messages={messages}
+                status={status}
+                docs={claim.supporting_docs}
+                onOpenDoc={setActiveDoc}
+              />
             )}
 
             {resolution && (
-              <ResolutionPanel
-                claimId={claim.id}
-                resolution={resolution}
-                onApproved={setResolution}
-              />
+              <div id="seek-verdict" className="scroll-mt-[72px]">
+                <ResolutionPanel
+                  claimId={claim.id}
+                  resolution={resolution}
+                  onResolved={(c) => {
+                    setResolution(c.resolution);
+                    setStatus(c.status);
+                  }}
+                />
+              </div>
             )}
 
             {!resolution && ["approved", "denied", "partial"].includes(status) && (
@@ -237,6 +327,14 @@ export default function ClaimRoom() {
           </section>
         </div>
       </div>
+
+      <DocModal doc={activeDoc} onClose={closeDoc} />
+      <PhotoLightbox
+        key={photoIndex}
+        photos={CRASH_PHOTOS}
+        startIndex={photoIndex}
+        onClose={closePhoto}
+      />
     </main>
   );
 }

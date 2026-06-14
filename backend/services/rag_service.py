@@ -5,6 +5,7 @@ module stays cheap. all-MiniLM-L6-v2 produces 384-dim vectors.
 """
 from __future__ import annotations
 
+import asyncio
 import uuid
 
 from sqlalchemy import select
@@ -24,6 +25,13 @@ def _get_model():
 
         _model = SentenceTransformer(settings.embedding_model)
     return _model
+
+
+def warm_up() -> None:
+    """Eagerly load the embedding model. Called at agent startup so the CPU-heavy first load
+    happens before the agent connects to Band — otherwise loading it mid-debate blocks the event
+    loop and times out the in-flight LLM HTTP call."""
+    _get_model()
 
 
 def embed_text(text: str) -> list[float]:
@@ -51,7 +59,8 @@ async def search_clauses(
     Returns dicts with clause metadata + a similarity score (1 - distance).
     Morgan and Alex use this to ground their arguments in real clause text.
     """
-    query_embedding = embed_text(query)
+    # Run the (CPU-bound) encode off the event loop so it never blocks concurrent LLM I/O.
+    query_embedding = await asyncio.to_thread(embed_text, query)
 
     distance = PolicyClause.embedding.cosine_distance(query_embedding)
     stmt = select(PolicyClause, distance.label("distance"))

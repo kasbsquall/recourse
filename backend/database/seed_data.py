@@ -113,7 +113,7 @@ SUPPORTING_DOCS = [
         "ref": "CLM-2024-04471-imgs",
         "url": "/docs/CLM-2024-04471-photos.html",
         "summary": (
-            "12 photos showing front-end crushing consistent with 35mph guardrail impact."
+            "4 photos showing front-end crushing consistent with 35mph guardrail impact."
         ),
     },
 ]
@@ -193,7 +193,8 @@ async def seed() -> None:
         ]
         session.add(david_policy)
 
-        # --- Control case: Lisa Park (simple theft, approved, no debate needed) ---
+        # --- Second disputed case: Lisa Park (theft denied over an alleged commercial-use
+        # exclusion — a different adversarial scenario judges can run end-to-end). ---
         lisa_policy = Policy(
             policy_number="CPP-2024-7741",
             insured_name="Lisa Park",
@@ -206,6 +207,17 @@ async def seed() -> None:
             insurance_company="Crestview Mutual Insurance",
             coverage_details={"collision": True, "comprehensive": True},
         )
+        # Same policy clause set (reuse the embeddings) so Morgan's RAG search works for Lisa too.
+        lisa_policy.clauses = [
+            PolicyClause(
+                clause_number=c["clause_number"],
+                clause_title=c["clause_title"],
+                clause_text=c["clause_text"],
+                clause_type=c["clause_type"],
+                embedding=emb,
+            )
+            for c, emb in zip(CLAUSES, embeddings)
+        ]
         lisa_policy.claims = [
             Claim(
                 claim_number="CLM-2024-03988",
@@ -213,18 +225,43 @@ async def seed() -> None:
                 incident_type="theft",
                 location="Miami, FL",
                 amount_requested=Decimal("4200.00"),
-                status="approved",
-                incident_description=(
-                    "Vehicle stereo and catalytic converter stolen from parked vehicle. "
-                    "Police report filed. Clear comprehensive coverage event under §5.2."
+                status="pending",
+                original_denial_reason=(
+                    "Claim denied per §7.4 — General Exclusions. Adjuster alleges the vehicle was "
+                    "used for undisclosed commercial (rideshare) purposes, voiding comprehensive "
+                    "coverage."
                 ),
-                supporting_docs=[],
+                incident_description=(
+                    "Vehicle stereo and catalytic converter stolen overnight from the vehicle while "
+                    "parked outside the insured's residence. Police report filed within 24 hours. "
+                    "The insured disputes the commercial-use allegation, stating the vehicle is for "
+                    "personal use only. Theft is a comprehensive-coverage event under §5.2."
+                ),
+                supporting_docs=[
+                    {
+                        "type": "police_report",
+                        "ref": "MPD-2024-5567",
+                        "summary": (
+                            "Overnight theft of stereo and catalytic converter from a parked "
+                            "vehicle outside the residence; reported within 24h; no indication of "
+                            "commercial use."
+                        ),
+                    },
+                    {
+                        "type": "adjuster_note",
+                        "ref": "ADJ-2024-3310",
+                        "summary": (
+                            "Denial cites suspected undisclosed rideshare use — but no rideshare "
+                            "records, trip logs, or commercial markings are offered as evidence."
+                        ),
+                    },
+                ],
             )
         ]
         session.add(lisa_policy)
 
         await session.commit()
-        print("  inserted: 2 policies, 6 clauses, 2 claims")
+        print("  inserted: 2 policies, 12 clauses, 2 pending claims")
 
 
 async def main() -> None:

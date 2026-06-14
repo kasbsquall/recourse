@@ -4,14 +4,15 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import AgentAvatar from "@/components/AgentAvatar";
+import SiteFooter from "@/components/SiteFooter";
 import SiteHeader from "@/components/SiteHeader";
 import StatusBadge from "@/components/StatusBadge";
 import { getClaims } from "@/lib/api";
 import { ROSTER, getAgent, textOn } from "@/lib/agents";
 import type { Claim } from "@/lib/types";
 
-const money = (v: string) =>
-  `$${Number(v).toLocaleString("en-US", { minimumFractionDigits: 0 })}`;
+const money0 = (v: number) =>
+  `$${v.toLocaleString("en-US", { maximumFractionDigits: 0 })}`;
 const day = (v: string) =>
   new Date(v + "T00:00:00").toLocaleDateString("en-US", {
     month: "short",
@@ -19,15 +20,176 @@ const day = (v: string) =>
     year: "numeric",
   });
 
-function Stat({ label, value, bg }: { label: string; value: number; bg: string }) {
+const RESOLVED = ["approved", "denied", "partial"];
+const TABLE_COLS = "grid-cols-[1.3fr_1.2fr_1fr_0.9fr_1fr_0.9fr]";
+const PANEL_MIN_H = "min-h-[132px]"; // every panel card matches the "Why adversarial" card
+
+function Stat({
+  label,
+  value,
+  sub,
+  bg,
+  flash,
+}: {
+  label: string;
+  value: string;
+  sub?: string;
+  bg: string;
+  flash?: boolean;
+}) {
   return (
-    <div
-      className="brut px-4 py-3"
-      style={{ background: bg, color: textOn(bg) }}
-    >
-      <div className="font-display text-4xl leading-none">{value}</div>
-      <div className="uppercase-mono mt-1.5 text-[10px] font-bold">{label}</div>
+    <div className="brut px-4 py-3.5" style={{ background: bg, color: textOn(bg) }}>
+      <div className="font-display flex items-center gap-2 text-4xl leading-none">
+        {flash && <span className="flash h-2.5 w-2.5" style={{ background: textOn(bg) }} />}
+        {value}
+      </div>
+      <div className="uppercase-mono mt-2 text-[10px] font-bold">{label}</div>
+      {sub && <div className="mt-0.5 text-[11px] opacity-75">{sub}</div>}
     </div>
+  );
+}
+
+function Step({
+  n,
+  title,
+  body,
+  accent,
+}: {
+  n: string;
+  title: string;
+  body: React.ReactNode;
+  accent: string;
+}) {
+  return (
+    <div className="brut-hover brut relative p-5" style={{ boxShadow: "var(--shadow)" }}>
+      <div
+        className="font-display absolute -right-3 -top-4 flex h-9 w-9 items-center justify-center text-lg"
+        style={{ background: accent, color: textOn(accent), border: "2.5px solid var(--ink)" }}
+      >
+        {n}
+      </div>
+      <h3 className="font-display text-xl uppercase tracking-tight">{title}</h3>
+      <p className="mt-2 text-[13px] leading-relaxed text-[var(--muted)]">{body}</p>
+    </div>
+  );
+}
+
+function PanelCard({ slug }: { slug: string }) {
+  const a = getAgent(slug);
+  return (
+    <div className={`brut-hover brut flex ${PANEL_MIN_H} flex-col overflow-hidden`}>
+      <div className="h-2 shrink-0" style={{ background: a.hex }} />
+      <div className="flex flex-1 items-center gap-3.5 p-4" style={{ background: "var(--paper-2)" }}>
+        <AgentAvatar slug={slug} size={60} />
+        <div className="min-w-0">
+          <div className="font-display text-lg uppercase leading-none tracking-tight">
+            {a.name}
+          </div>
+          <div
+            className="uppercase-mono mt-1.5 inline-block px-1.5 py-0.5 text-[9px] font-bold"
+            style={{ background: a.hex, color: textOn(a.hex) }}
+          >
+            {a.role}
+          </div>
+          <div className="mt-2 text-[11px] leading-snug text-[var(--ink)]">{a.tagline}</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ClaimsDocket({ claims, err }: { claims: Claim[] | null; err: string | null }) {
+  return (
+    <section className="mt-12">
+      <h2 className="font-display mb-5 text-2xl uppercase tracking-tight">Case docket</h2>
+
+      {err && (
+        <div
+          className="uppercase-mono px-4 py-3 text-[12px] font-bold"
+          style={{ background: "#dc2626", color: "#fff", border: "2.5px solid var(--ink)" }}
+        >
+          Backend unreachable — start the API on :8000. ({err})
+        </div>
+      )}
+
+      {!claims && !err && (
+        <div className="brut uppercase-mono px-5 py-6 text-xs text-[var(--muted)]">Loading…</div>
+      )}
+
+      {claims && claims.length === 0 && (
+        <div className="brut flex flex-col items-center gap-4 p-10 text-center">
+          <p className="text-sm text-[var(--muted)]">No claims yet.</p>
+          <Link
+            href="/new-claim"
+            className="brut-hover uppercase-mono px-4 py-2 text-[12px] font-bold"
+            style={{ background: "var(--signal)", border: "2.5px solid var(--ink)" }}
+          >
+            + File the first claim
+          </Link>
+        </div>
+      )}
+
+      {claims && claims.length > 0 && (
+        <>
+          {/* desktop table */}
+          <div className="brut hidden md:block" style={{ boxShadow: "var(--shadow)" }}>
+            <div
+              className={`uppercase-mono grid ${TABLE_COLS} gap-4 border-b-[2.5px] border-[var(--ink)] bg-[var(--ink)] px-5 py-2.5 text-[10px] font-bold text-[var(--bg)]`}
+            >
+              <span>Claim №</span>
+              <span>Insured</span>
+              <span>Amount</span>
+              <span>Type</span>
+              <span>Status</span>
+              <span className="text-right">Date</span>
+            </div>
+            {claims.map((c, i) => (
+              <Link
+                key={c.id}
+                href={`/claims/${c.id}`}
+                className={`grid ${TABLE_COLS} items-center gap-4 px-5 py-3.5 transition-colors hover:bg-[var(--signal)] ${
+                  i > 0 ? "border-t-2 border-[var(--ink)]" : ""
+                }`}
+              >
+                <span className="font-mono text-sm font-bold">{c.claim_number}</span>
+                <span className="text-sm">{c.insured_name ?? "—"}</span>
+                <span className="font-mono text-sm font-bold tabular-nums">
+                  {money0(Number(c.amount_requested))}
+                </span>
+                <span className="uppercase-mono text-[10px] font-bold">{c.incident_type}</span>
+                <StatusBadge status={c.status} />
+                <span className="font-mono text-right text-[11px] text-[var(--muted)]">
+                  {day(c.incident_date)}
+                </span>
+              </Link>
+            ))}
+          </div>
+
+          {/* mobile cards */}
+          <div className="flex flex-col gap-3 md:hidden">
+            {claims.map((c) => (
+              <Link key={c.id} href={`/claims/${c.id}`} className="brut-hover brut block p-4">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="font-mono text-sm font-bold">{c.claim_number}</span>
+                  <StatusBadge status={c.status} />
+                </div>
+                <div className="mt-1 font-display text-lg uppercase leading-none tracking-tight">
+                  {c.insured_name ?? "—"}
+                </div>
+                <div className="uppercase-mono mt-2 flex items-center justify-between text-[10px] font-bold text-[var(--muted)]">
+                  <span>
+                    {c.incident_type} · {day(c.incident_date)}
+                  </span>
+                  <span className="font-mono text-sm text-[var(--ink)]">
+                    {money0(Number(c.amount_requested))}
+                  </span>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </>
+      )}
+    </section>
   );
 }
 
@@ -36,97 +198,183 @@ export default function Dashboard() {
   const [err, setErr] = useState<string | null>(null);
 
   useEffect(() => {
-    getClaims().then(setClaims).catch((e) => setErr(String(e)));
+    const load = () => getClaims().then(setClaims).catch((e) => setErr(String(e)));
+    load();
+    // Re-fetch whenever the dashboard regains focus/visibility (covers the browser back button
+    // and bfcache) so a claim that's mid-re-run shows "In Review", not a stale "Approved".
+    const onShow = () => {
+      if (document.visibilityState === "visible") load();
+    };
+    window.addEventListener("focus", onShow);
+    window.addEventListener("pageshow", onShow);
+    document.addEventListener("visibilitychange", onShow);
+    return () => {
+      window.removeEventListener("focus", onShow);
+      window.removeEventListener("pageshow", onShow);
+      document.removeEventListener("visibilitychange", onShow);
+    };
   }, []);
 
-  const stats = {
-    total: claims?.length ?? 0,
-    in_review: claims?.filter((c) => c.status === "in_review").length ?? 0,
-    approved: claims?.filter((c) => c.status === "approved").length ?? 0,
-    denied: claims?.filter((c) => ["denied", "partial"].includes(c.status)).length ?? 0,
-  };
+  const all = claims ?? [];
+  const resolved = all.filter((c) => RESOLVED.includes(c.status));
+  const overturned = resolved.filter((c) => ["approved", "partial"].includes(c.status));
+  const overturnRate = resolved.length
+    ? Math.round((overturned.length / resolved.length) * 100)
+    : 0;
+  const inReview = all.filter((c) => c.status === "in_review").length;
+  const inDispute = all.reduce((s, c) => s + Number(c.amount_requested || 0), 0);
 
   return (
     <main className="min-h-screen">
       <SiteHeader />
-      <div className="mx-auto max-w-6xl px-6 py-8">
-        <div className="mb-7 flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
+
+      <div className="mx-auto max-w-6xl px-6 py-10">
+        {/* HERO */}
+        <section className="grid items-end gap-8 lg:grid-cols-[1.4fr_1fr]">
           <div>
-            <h1 className="font-display text-5xl uppercase leading-[0.95] tracking-tight">
-              Adjudication
-              <br />
-              Dashboard
-            </h1>
-            <p className="mt-3 max-w-md text-sm text-[var(--ink)]">
-              Four agents debate every disputed denial through Band. The conversation{" "}
-              <span className="font-extrabold">is</span> the audit trail.
-            </p>
-          </div>
-          <div className="flex flex-col items-start gap-3 md:items-end">
-            <Link
-              href="/new-claim"
-              className="brut-hover uppercase-mono px-4 py-2 text-[12px] font-bold"
-              style={{ background: "var(--signal)", border: "2.5px solid var(--ink)", boxShadow: "var(--shadow-sm)" }}
+            <span
+              className="uppercase-mono inline-block px-2 py-1 text-[10px] font-bold"
+              style={{ background: "var(--ink)", color: "var(--bg)" }}
             >
-              + New Claim
-            </Link>
-            <div className="flex gap-3">
-            {ROSTER.map((slug) => {
-              const a = getAgent(slug);
-              return (
-                <div key={slug} className="flex flex-col items-center gap-1.5">
-                  <AgentAvatar slug={slug} size={48} />
-                  <span className="uppercase-mono text-[9px] font-bold">{a.name}</span>
-                </div>
-              );
-            })}
+              Crestview Mutual · Claims Desk
+            </span>
+            <h1 className="font-display mt-4 text-6xl uppercase leading-[0.92] tracking-tight sm:text-7xl">
+              Adversarial
+              <br />
+              Adjudication
+            </h1>
+            <p className="mt-4 max-w-md text-[15px] leading-relaxed">
+              Four AI adjudicators debate every disputed denial through Band — one fights for the
+              insured. The conversation <span className="font-extrabold">is</span> the
+              legally-defensible audit trail.
+            </p>
+            <div className="mt-6 flex flex-wrap items-center gap-3">
+              <Link
+                href="/new-claim"
+                className="brut-hover font-display px-6 py-3.5 text-lg uppercase tracking-tight"
+                style={{ background: "var(--signal)", border: "2.5px solid var(--ink)", boxShadow: "var(--shadow)" }}
+              >
+                + File a Claim
+              </Link>
+              <a
+                href="#panel"
+                className="uppercase-mono px-2 py-1 text-[11px] font-bold text-[var(--muted)] hover:text-[var(--ink)]"
+              >
+                Meet the panel ↓
+              </a>
             </div>
           </div>
-        </div>
 
-        <div className="mb-7 grid grid-cols-2 gap-4 md:grid-cols-4">
-          <Stat label="Total Claims" value={stats.total} bg="#ffffff" />
-          <Stat label="In Review" value={stats.in_review} bg="#2d5bff" />
-          <Stat label="Approved" value={stats.approved} bg="#16a34a" />
-          <Stat label="Denied / Partial" value={stats.denied} bg="#ff3b30" />
-        </div>
-
-        <div className="brut">
-          <div className="uppercase-mono grid grid-cols-[1.3fr_1.2fr_1fr_0.9fr_1fr_0.9fr] gap-4 border-b-[2.5px] border-[var(--ink)] bg-[var(--ink)] px-5 py-2.5 text-[10px] font-bold text-[var(--bg)]">
-            <span>Claim №</span>
-            <span>Insured</span>
-            <span>Amount</span>
-            <span>Type</span>
-            <span>Status</span>
-            <span className="text-right">Date</span>
+          {/* roster cluster */}
+          <div className="brut p-5" style={{ boxShadow: "var(--shadow-lg)" }}>
+            <div className="uppercase-mono mb-3 text-[10px] font-bold text-[var(--muted)]">
+              The standing panel
+            </div>
+            <div className="flex items-end justify-between gap-1">
+              {ROSTER.map((slug) => {
+                const a = getAgent(slug);
+                return (
+                  <div key={slug} className="flex w-12 flex-col items-center gap-1.5">
+                    <AgentAvatar slug={slug} size={48} />
+                    <span className="uppercase-mono whitespace-nowrap text-[9px] font-bold">
+                      {a.name}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+            <div className="mt-4 border-t-2 border-[var(--ink)] pt-3 text-[11px] leading-snug text-[var(--muted)]">
+              Coordinator opens the case → Blake & Morgan weigh coverage → Alex challenges →
+              Sam rules → a human signs off.
+            </div>
           </div>
+        </section>
 
-          {err && <div className="font-mono px-5 py-6 text-sm text-[#ff3b30]">Backend unreachable: {err}</div>}
-          {!claims && !err && (
-            <div className="uppercase-mono px-5 py-6 text-xs text-[var(--muted)]">Loading…</div>
-          )}
-          {claims?.map((c, i) => (
-            <Link
-              key={c.id}
-              href={`/claims/${c.id}`}
-              className={`grid grid-cols-[1.3fr_1.2fr_1fr_0.9fr_1fr_0.9fr] items-center gap-4 px-5 py-3.5 transition-colors hover:bg-[var(--signal)] ${
-                i > 0 ? "border-t-2 border-[var(--ink)]" : ""
-              }`}
+        {/* KPIs */}
+        <section className="mt-10 grid grid-cols-2 gap-4 lg:grid-cols-4">
+          <Stat label="Disputes filed" value={String(all.length)} bg="#ffffff" />
+          <Stat
+            label="Denials overturned"
+            value={`${overturnRate}%`}
+            sub={`${overturned.length} of ${resolved.length || 0} resolved`}
+            bg="#15803d"
+          />
+          <Stat label="Value in dispute" value={money0(inDispute)} bg="#f5d90a" />
+          <Stat
+            label="In live review"
+            value={String(inReview)}
+            bg={inReview > 0 ? "#2d5bff" : "#ffffff"}
+            flash={inReview > 0}
+          />
+        </section>
+
+        {/* CASE DOCKET — most relevant, kept high */}
+        <ClaimsDocket claims={claims} err={err} />
+
+        {/* HOW IT WORKS — dark band so the white step cards pop */}
+        <section className="mt-14">
+          <div className="brut p-6 sm:p-8" style={{ background: "var(--ink)", boxShadow: "var(--shadow-lg)" }}>
+            <h2 className="font-display text-2xl uppercase tracking-tight text-[var(--bg)]">
+              How a verdict is reached
+            </h2>
+            <div className="mt-7 grid gap-6 md:grid-cols-3">
+              <Step
+                n="1"
+                title="Intake"
+                accent="#0e7490"
+                body="A disputed denial enters. The Coordinator opens the case file — policy, evidence, the original denial — and convenes the panel in a live Band room."
+              />
+              <Step
+                n="2"
+                title="Adversarial debate"
+                accent="#2d5bff"
+                body={
+                  <>
+                    Blake checks coverage, Morgan quotes the policy verbatim, Alex fights for the
+                    insured, Sam rules. Every message is recorded —{" "}
+                    <span className="font-bold text-[var(--ink)]">the conversation is the audit trail.</span>
+                  </>
+                }
+              />
+              <Step
+                n="3"
+                title="Human sign-off"
+                accent="#15803d"
+                body="A claims officer ratifies the verdict or overrides it. The record is sealed with a tamper-evident SHA-256 hash — defensible to any regulator."
+              />
+            </div>
+          </div>
+        </section>
+
+        {/* MEET THE PANEL */}
+        <section id="panel" className="mt-14 scroll-mt-24">
+          <div className="flex items-baseline justify-between">
+            <h2 className="font-display text-2xl uppercase tracking-tight">Meet the panel</h2>
+            <span className="uppercase-mono text-[10px] font-bold text-[var(--muted)]">
+              5 agents · 2 model providers
+            </span>
+          </div>
+          <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {ROSTER.map((slug) => (
+              <PanelCard key={slug} slug={slug} />
+            ))}
+            <div
+              className={`flex ${PANEL_MIN_H} flex-col justify-center p-4 text-[12px] leading-relaxed text-[var(--muted)]`}
+              style={{ border: "2.5px dashed var(--ink)" }}
             >
-              <span className="font-mono text-sm font-bold">{c.claim_number}</span>
-              <span className="text-sm">{c.insured_name ?? "—"}</span>
-              <span className="font-mono text-sm font-bold tabular-nums">
-                {money(c.amount_requested)}
+              <span className="uppercase-mono text-[10px] font-bold text-[var(--ink)]">
+                Why adversarial?
               </span>
-              <span className="uppercase-mono text-[10px] font-bold">{c.incident_type}</span>
-              <StatusBadge status={c.status} />
-              <span className="font-mono text-right text-[11px] text-[var(--muted)]">
-                {day(c.incident_date)}
-              </span>
-            </Link>
-          ))}
-        </div>
+              <p className="mt-1.5">
+                A lone model rubber-stamps. A panel that must <span className="font-bold text-[var(--ink)]">argue</span>{" "}
+                surfaces the exception a single pass would miss — and leaves a record of why.
+              </p>
+            </div>
+          </div>
+        </section>
       </div>
+
+      <SiteFooter />
     </main>
   );
 }

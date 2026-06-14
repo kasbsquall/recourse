@@ -6,8 +6,8 @@ const STYLES: Record<
 > = {
   pending: { label: "Pending", bg: "#e9e6dd", fg: "#0e0e0e" },
   in_review: { label: "In Review", bg: "#2d5bff", fg: "#ffffff", flash: true },
-  approved: { label: "Approved", bg: "#16a34a", fg: "#ffffff" },
-  denied: { label: "Denied", bg: "#ff3b30", fg: "#ffffff" },
+  approved: { label: "Approved", bg: "#15803d", fg: "#ffffff" },
+  denied: { label: "Denied", bg: "#dc2626", fg: "#ffffff" },
   partial: { label: "Partial", bg: "#f5d90a", fg: "#0e0e0e" },
 };
 

@@ -19,15 +19,15 @@
 <body>
 <div class="doc">
   <h1>Photographic Evidence — CLM-2024-04471</h1>
-  <div class="sub">12 photos on file · front-end / engine compartment · I-95 guardrail impact</div>
+  <div class="sub">4 photos on file · front-end / engine compartment · I-95 guardrail impact</div>
   <div class="grid" id="grid"></div>
 </div>
 <script>
   const shots = [
-    ["crash-1.png", "Front-end crush — driver side quarter"],
-    ["crash-2.png", "Engine compartment — impact damage to oil pan"],
-    ["crash-3.png", "Guardrail contact point — I-95 MM26"],
-    ["crash-4.png", "Deployed airbags — cabin"],
+    ["crash-1.jpg", "Front-end crush — driver side quarter"],
+    ["crash-2.jpg", "Engine compartment — impact damage to oil pan"],
+    ["crash-3.jpg", "Guardrail contact point — I-95 MM26"],
+    ["crash-4.jpg", "Deployed airbags — cabin"],
   ];
   document.getElementById("grid").innerHTML = shots.map(([src, cap]) =>
     `<figure><img src="${src}" alt="${cap}" onerror="this.outerHTML='<div class=\\'ph\\'>Photo ${src} — add to /public/docs/</div>'"><figcaption>${cap}</figcaption></figure>`

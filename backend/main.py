@@ -21,6 +21,7 @@ from schemas import (
     ClaimOut,
     CreateClaimIn,
     MessageOut,
+    OverrideIn,
     PolicyOut,
     ReviseIn,
 )
@@ -29,9 +30,11 @@ from services.orchestrator import run_debate
 logger = logging.getLogger("recourse.api")
 
 app = FastAPI(title="Recourse API", version="1.0.0")
+# Fail safe, not open: if CORS_ORIGINS is unset, default to localhost (dev) instead of "*".
+# Set CORS_ORIGINS=https://your-frontend in the deploy environment.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.cors_origins_list or ["*"],
+    allow_origins=settings.cors_origins_list or ["http://localhost:3000"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -118,6 +121,9 @@ async def adjudicate(claim_id: uuid.UUID, session: AsyncSession = Depends(get_se
     claim = await session.get(Claim, claim_id)
     if claim is None:
         raise HTTPException(status_code=404, detail="Claim not found")
+    if claim.status == "in_review":
+        # A debate is already running; a second one would race and duplicate the resolution.
+        raise HTTPException(status_code=409, detail="Adjudication already in progress")
     # Clear any prior run so re-adjudication starts clean.
     await session.execute(delete(AgentMessage).where(AgentMessage.claim_id == claim_id))
     await session.execute(delete(Resolution).where(Resolution.claim_id == claim_id))
@@ -192,6 +198,39 @@ async def approve(
         raise HTTPException(status_code=409, detail="No resolution to approve yet")
     claim.resolution.approved_by = body.approved_by
     claim.resolution.approved_at = datetime.now(timezone.utc)
+    await session.commit()
+    return await _load_claim_detail(session, claim_id)
+
+
+@app.post("/api/claims/{claim_id}/override", response_model=ClaimDetailOut)
+async def override_decision(
+    claim_id: uuid.UUID, body: OverrideIn, session: AsyncSession = Depends(get_session)
+):
+    """Human officer overrides the panel's recommendation and denies the claim. The panel's
+    recommendation is preserved in the resolution; the override is recorded in the audit trail."""
+    from datetime import datetime, timezone
+
+    claim = await _load_claim_detail(session, claim_id)
+    if claim.resolution is None:
+        raise HTTPException(status_code=409, detail="No resolution to override yet")
+    now = datetime.now(timezone.utc)
+    claim.resolution.approved_by = body.officer
+    claim.resolution.approved_at = now
+    audit = dict(claim.resolution.audit_trail or {})
+    audit["officer_override"] = {
+        "action": "denied",
+        "by": body.officer,
+        "reason": body.reason,
+        "at": now.isoformat(),
+        "panel_decision": claim.resolution.decision,
+        "panel_amount": (
+            float(claim.resolution.approved_amount)
+            if claim.resolution.approved_amount is not None
+            else None
+        ),
+    }
+    claim.resolution.audit_trail = audit
+    claim.status = "denied"
     await session.commit()
     return await _load_claim_detail(session, claim_id)
 

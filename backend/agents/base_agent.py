@@ -50,13 +50,16 @@ def build_llm(provider: str) -> ChatOpenAI:
     # context window — an unbounded (default ~4096) output reservation overflows it once
     # the orchestrator passes accumulated debate context. 900 leaves ample room.
     if provider == "featherless":
+        # Fail fast: the orchestrator fails Alex's turn over to the reliable provider if it
+        # stalls (~65s), so a single slow/cold Featherless call should give up quickly rather
+        # than stack retries into minutes of dead air. timeout=45, no retries.
         return ChatOpenAI(
             base_url=settings.featherless_base_url,
             api_key=settings.featherless_api_key,
             model=settings.featherless_model,
             temperature=0.4,
-            timeout=120,
-            max_retries=2,
+            timeout=45,
+            max_retries=0,
             max_tokens=900,
             disable_streaming=True,
         )
@@ -113,6 +116,15 @@ def create_band_agent(
 
 async def run_agent(slug: str, system_prompt: str, tools: list[Any] | None = None) -> None:
     """Create and run an agent until interrupted (Ctrl+C). Used by each agent's __main__."""
+    import asyncio
+
     agent = create_band_agent(slug, system_prompt, tools)
+    if slug == "morgan":
+        # Morgan is the only agent that runs semantic clause search. Load the embedding model
+        # now (CPU-heavy) so it doesn't block the event loop mid-debate and time out the LLM call.
+        from services.rag_service import warm_up
+
+        print(f"[{slug}] warming embedding model (clause search) ...")
+        await asyncio.to_thread(warm_up)
     print(f"[{slug}] connecting to Band as {settings.band_agents[slug]['handle']} ...")
     await agent.run()

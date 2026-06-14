@@ -2,12 +2,22 @@
 
 import { useState } from "react";
 
-import { approveClaim, auditUrl } from "@/lib/api";
-import type { Resolution } from "@/lib/types";
+import { approveClaim, auditUrl, overrideClaim } from "@/lib/api";
+import type { ClaimDetail, Resolution } from "@/lib/types";
+
+const OFFICER = "Kevin Soto (Claims Officer)";
+
+/** Escape agent/officer-sourced strings before writing them into the print window's raw HTML. */
+const esc = (s: string) =>
+  (s ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
 
 const DECISION: Record<string, { bg: string; fg: string; label: string }> = {
-  APPROVED: { bg: "#16a34a", fg: "#ffffff", label: "Approved" },
-  DENIED: { bg: "#ff3b30", fg: "#ffffff", label: "Denied" },
+  APPROVED: { bg: "#15803d", fg: "#ffffff", label: "Approved" },
+  DENIED: { bg: "#dc2626", fg: "#ffffff", label: "Denied" },
   PARTIAL: { bg: "#f5d90a", fg: "#0e0e0e", label: "Partial" },
   UNCLEAR: { bg: "#e9e6dd", fg: "#0e0e0e", label: "Unclear" },
 };
@@ -18,28 +28,47 @@ const money = (v: string | null) =>
 export default function ResolutionPanel({
   claimId,
   resolution,
-  onApproved,
+  onResolved,
 }: {
   claimId: string;
   resolution: Resolution;
-  onApproved: (r: Resolution) => void;
+  onResolved: (claim: ClaimDetail) => void;
 }) {
   const [busy, setBusy] = useState(false);
   const [showReasoning, setShowReasoning] = useState(true);
+  const [overriding, setOverriding] = useState(false);
+  const [reason, setReason] = useState("");
   const d = DECISION[resolution.decision] ?? DECISION.UNCLEAR;
   const amt = money(resolution.approved_amount);
 
   const hash = (resolution.audit_trail?.transcript_sha256 as string) ?? null;
+  const override = resolution.audit_trail?.officer_override as
+    | { by?: string; reason?: string }
+    | undefined;
   const [err, setErr] = useState<string | null>(null);
 
   async function approve() {
     setBusy(true);
     setErr(null);
     try {
-      const updated = await approveClaim(claimId, "Kevin Soto (Claims Officer)");
-      if (updated.resolution) onApproved(updated.resolution);
+      const updated = await approveClaim(claimId, OFFICER);
+      onResolved(updated);
     } catch {
       setErr("Couldn't record the approval — check the backend and retry.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function confirmOverride() {
+    setBusy(true);
+    setErr(null);
+    try {
+      const updated = await overrideClaim(claimId, OFFICER, reason.trim());
+      onResolved(updated);
+      setOverriding(false);
+    } catch {
+      setErr("Couldn't record the override — check the backend and retry.");
     } finally {
       setBusy(false);
     }
@@ -51,10 +80,9 @@ export default function ResolutionPanel({
       const rows = (a.transcript ?? [])
         .map(
           (m: { agent: string; content: string }) =>
-            `<div class="turn"><div class="who">${m.agent}</div><div class="body">${(m.content || "")
-              .replace(/&/g, "&amp;")
-              .replace(/</g, "&lt;")
-              .replace(/\n/g, "<br>")}</div></div>`,
+            `<div class="turn"><div class="who">${esc(m.agent)}</div><div class="body">${esc(
+              m.content,
+            ).replace(/\n/g, "<br>")}</div></div>`,
         )
         .join("");
       const r = a.resolution ?? {};
@@ -74,10 +102,10 @@ export default function ResolutionPanel({
   <h1>Adjudication Record</h1>
   <div class="sub">RECOURSE · Crestview Mutual · Claim ${a.claim_number} · status: ${a.status}</div>
   <div class="verdict">${r.decision ?? "—"}${r.approved_amount != null ? " · $" + Number(r.approved_amount).toLocaleString("en-US", { minimumFractionDigits: 2 }) : ""}</div>
-  <p>${(r.legal_reasoning || "").replace(/</g, "&lt;").replace(/\n/g, "<br>")}</p>
-  <h2>Cited clauses</h2><p>${(r.cited_clauses ?? []).join(" · ") || "—"}</p>
+  <p>${esc(r.legal_reasoning).replace(/\n/g, "<br>")}</p>
+  <h2>Cited clauses</h2><p>${(r.cited_clauses ?? []).map(esc).join(" · ") || "—"}</p>
   <h2>Adjudication transcript (Band room)</h2>${rows}
-  <h2>Signature</h2><p>${r.approved_by ? "Approved by " + r.approved_by + (r.approved_at ? " · " + r.approved_at : "") : "Pending human approval"}</p>
+  <h2>Signature</h2><p>${r.approved_by ? "Approved by " + esc(r.approved_by) + (r.approved_at ? " · " + esc(r.approved_at) : "") : "Pending human approval"}</p>
   <div class="meta">Band room: ${a.band_room_id ?? "—"}<br>Tamper-evident hash (sha256): ${(r.audit_trail && r.audit_trail.transcript_sha256) || "—"}</div>
 </body></html>`);
       w.document.close();
@@ -95,11 +123,20 @@ export default function ResolutionPanel({
       </div>
 
       <div
-        className="flex flex-wrap items-center gap-4 border-b-[2.5px] border-[var(--ink)] px-5 py-5"
+        className="border-b-[2.5px] border-[var(--ink)] px-5 py-4"
         style={{ background: d.bg, color: d.fg }}
       >
-        <span className="font-display text-3xl uppercase tracking-tight">{d.label}</span>
-        {amt && <span className="font-mono text-3xl font-bold">{amt}</span>}
+        <div className="uppercase-mono text-[10px] font-bold opacity-80">
+          {override
+            ? "Panel recommendation — overridden by officer"
+            : resolution.approved_by
+              ? "Officer-ratified decision"
+              : "Panel recommendation · pending officer sign-off"}
+        </div>
+        <div className="mt-1 flex flex-wrap items-center gap-4">
+          <span className="font-display text-3xl uppercase tracking-tight">{d.label}</span>
+          {amt && <span className="font-mono text-3xl font-bold">{amt}</span>}
+        </div>
       </div>
 
       <div className="space-y-4 p-5">
@@ -143,30 +180,94 @@ export default function ResolutionPanel({
         {err && (
           <div
             className="uppercase-mono px-3 py-2 text-[11px] font-bold"
-            style={{ background: "#ff3b30", color: "#fff", border: "2px solid var(--ink)" }}
+            style={{ background: "#dc2626", color: "#fff", border: "2px solid var(--ink)" }}
           >
             {err}
           </div>
         )}
 
         {resolution.approved_by ? (
+          override ? (
+            <div
+              className="px-4 py-3"
+              style={{ background: "#dc2626", color: "#fff", border: "2.5px solid var(--ink)" }}
+            >
+              <div className="uppercase-mono text-[12px] font-bold">
+                ⊘ Overridden &amp; denied by {resolution.approved_by}
+              </div>
+              {override.reason && (
+                <div className="mt-1 text-[12px] opacity-90">“{override.reason}”</div>
+              )}
+              {resolution.approved_at && (
+                <div className="uppercase-mono mt-1 text-[10px] opacity-80">
+                  {new Date(resolution.approved_at).toLocaleString()}
+                </div>
+              )}
+            </div>
+          ) : (
+            <div
+              className="uppercase-mono px-4 py-3 text-[12px] font-bold"
+              style={{ background: "#15803d", color: "#fff", border: "2.5px solid var(--ink)" }}
+            >
+              ✓ Signed off by {resolution.approved_by}
+              {resolution.approved_at &&
+                ` · ${new Date(resolution.approved_at).toLocaleString()}`}
+            </div>
+          )
+        ) : overriding ? (
           <div
-            className="uppercase-mono px-4 py-3 text-[12px] font-bold"
-            style={{ background: "#16a34a", color: "#fff", border: "2.5px solid var(--ink)" }}
+            className="space-y-2 p-3"
+            style={{ background: "var(--paper-2)", border: "2.5px solid var(--ink)" }}
           >
-            ✓ Approved by {resolution.approved_by}
-            {resolution.approved_at &&
-              ` · ${new Date(resolution.approved_at).toLocaleString()}`}
+            <div className="uppercase-mono text-[11px] font-bold text-[#dc2626]">
+              ⊘ Override &amp; deny — state your reason for the record
+            </div>
+            <textarea
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              rows={2}
+              placeholder="e.g. Mechanic report unsigned; evidence insufficient to overturn §7.3."
+              className="w-full resize-none p-2 text-[13px]"
+              style={{ background: "var(--paper)", border: "2px solid var(--ink)" }}
+            />
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={confirmOverride}
+                disabled={busy || !reason.trim()}
+                className="brut-hover uppercase-mono px-4 py-2 text-[12px] font-bold disabled:opacity-50"
+                style={{ background: "#dc2626", color: "#fff", border: "2.5px solid var(--ink)" }}
+              >
+                {busy ? "Recording…" : "⊘ Confirm override & deny"}
+              </button>
+              <button
+                onClick={() => setOverriding(false)}
+                disabled={busy}
+                className="brut-hover uppercase-mono px-4 py-2 text-[12px] font-bold"
+                style={{ background: "var(--paper)", border: "2.5px solid var(--ink)" }}
+              >
+                Cancel
+              </button>
+            </div>
           </div>
         ) : (
-          <button
-            onClick={approve}
-            disabled={busy}
-            className="brut-hover uppercase-mono w-full px-5 py-3 text-sm font-bold disabled:opacity-60"
-            style={{ background: "#16a34a", color: "#fff", border: "2.5px solid var(--ink)", boxShadow: "var(--shadow)" }}
-          >
-            {busy ? "Approving…" : "✓ Approve Resolution"}
-          </button>
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <button
+              onClick={approve}
+              disabled={busy}
+              className="brut-hover uppercase-mono flex-1 px-5 py-3 text-sm font-bold disabled:opacity-60"
+              style={{ background: "#15803d", color: "#fff", border: "2.5px solid var(--ink)", boxShadow: "var(--shadow)" }}
+            >
+              {busy ? "Signing off…" : "✓ Approve & sign off"}
+            </button>
+            <button
+              onClick={() => setOverriding(true)}
+              disabled={busy}
+              className="brut-hover uppercase-mono px-5 py-3 text-sm font-bold text-[#dc2626]"
+              style={{ background: "var(--paper)", border: "2.5px solid var(--ink)" }}
+            >
+              ⊘ Override &amp; deny
+            </button>
+          </div>
         )}
 
         <div className="flex flex-wrap gap-3">

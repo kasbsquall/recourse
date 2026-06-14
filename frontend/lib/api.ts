@@ -41,6 +41,8 @@ export const adjudicate = (id: string) =>
   post<Claim>(`/api/claims/${id}/adjudicate`);
 export const approveClaim = (id: string, approvedBy: string) =>
   post<ClaimDetail>(`/api/claims/${id}/approve`, { approved_by: approvedBy });
+export const overrideClaim = (id: string, officer: string, reason: string) =>
+  post<ClaimDetail>(`/api/claims/${id}/override`, { officer, reason });
 export const reviseClaim = (id: string) =>
   post<Claim>(`/api/claims/${id}/revise`);
 
