@@ -11,11 +11,11 @@ from pathlib import Path
 
 V = Path(__file__).parent
 A = V / "assets"
-STOCK = Path(r"C:/Users/User/Downloads/generado/5")
+STOCK = Path(r"C:/Users/User/Downloads/generado/6")  # watermark-free re-renders
 
-CLIP1 = STOCK / "Person_holding_insurance_denial_…_202606140351.mp4"   # denial letter
-CLIP2 = STOCK / "Claims_officer_overwhelmed_by_paper_202606140353.mp4"  # overwhelmed officer
-CLIP3 = STOCK / "Light_beams_forming_balanced_scale_202606140355.mp4"   # scale of justice
+CLIP1 = STOCK / "9813c5a4-706d-4ba4-879a-7d136834c71b.mp4"  # denial letter
+CLIP2 = STOCK / "774cd7a1-1b29-4ec5-a7ab-0219b052ed52.mp4"  # overwhelmed officer
+CLIP3 = STOCK / "d5603924-cb38-454c-a325-c153843d52d1.mp4"  # scale of justice
 RAW = V / "raw" / "demo_raw.webm"
 ENDCARD = A / "endcard.png"
 
