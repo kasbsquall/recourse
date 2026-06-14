@@ -1,0 +1,11 @@
+# Internal reverse proxy (behind the cloudflared tunnel — no TLS here, Cloudflare terminates it).
+# Same-origin routing: /api/* -> backend, everything else -> frontend.
+:8080 {
+	handle /api/* {
+		reverse_proxy backend:8000 {
+			# Stream Server-Sent Events (the live debate) without buffering.
+			flush_interval -1
+		}
+	}
+	reverse_proxy frontend:3000
+}
