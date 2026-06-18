@@ -1,0 +1,454 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Recourse — Technical Deck v4</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;800;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --bg:#e9e6dd; --ink:#0e0e0e; --paper:#fff; --paper2:#f3f1ea; --muted:#6b6a63;
+    --signal:#f5d90a;
+    --coord:#0e7490; --blake:#2d5bff; --morgan:#7c3aed; --alex:#dc2626; --sam:#15803d; --quinn:#b45309;
+    --shadow:5px 5px 0 var(--ink); --shadow-sm:3px 3px 0 var(--ink);
+    --display:"Archivo","Arial Black",sans-serif; --mono:"Space Mono","Courier New",monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:#555}
+  .slide{
+    position:relative; width:1280px; height:720px; overflow:hidden;
+    background:var(--bg); color:var(--ink);
+    background-image:radial-gradient(var(--ink) 0.6px,transparent 0.6px);
+    background-size:22px 22px;
+    font-family:var(--display); padding:60px 72px;
+    display:flex; flex-direction:column;
+    page-break-after:always;
+  }
+  .slide.dark{
+    background:#0b0b0c; color:#f5f5f7;
+    background-image:radial-gradient(rgba(255,255,255,.07) 0.7px,transparent 0.7px);
+  }
+  .eyebrow{font-family:var(--mono);font-weight:700;text-transform:uppercase;
+    letter-spacing:.14em;font-size:15px;color:var(--coord)}
+  .dark .eyebrow{color:#3bc6e6}
+  h1{font-family:var(--display);font-weight:900;letter-spacing:-.025em;line-height:1.0}
+  .muted{color:var(--muted)} .dark .muted{color:#9a9aa3}
+  .mono{font-family:var(--mono)}
+  .brut{background:var(--paper);border:2.5px solid var(--ink);box-shadow:var(--shadow)}
+  .brut-flat{background:var(--paper);border:2.5px solid var(--ink)}
+  .dark .brut,.dark .brut-flat{background:#141417;border-color:#2a2a31;box-shadow:none}
+  .row{display:flex;gap:18px}
+  .grow{flex:1}
+  .footer{position:absolute;left:72px;right:72px;bottom:28px;display:flex;
+    justify-content:space-between;font-family:var(--mono);font-size:12.5px;
+    letter-spacing:.08em;color:var(--muted);text-transform:uppercase}
+  .dark .footer{color:#71717a}
+  .tag{display:inline-block;font-family:var(--mono);font-size:13px;font-weight:700;
+    border:2px solid var(--ink);padding:7px 13px;background:var(--paper)}
+  .dark .tag{border-color:#3a3a42;background:#141417;color:#d4d4d8}
+  .chip{font-family:var(--mono);font-size:12.5px;border:2px solid var(--ink);
+    padding:5px 11px;background:var(--paper);white-space:nowrap}
+  .barlabel{font-family:var(--mono);font-weight:700;text-transform:uppercase;
+    letter-spacing:.1em;font-size:12px;padding:4px 10px;color:#fff;display:inline-block}
+  /* agent portraits */
+  .panel{display:flex;gap:13px;margin-top:26px}
+  .agent{flex:1;background:var(--paper);border:2.5px solid var(--ink);box-shadow:var(--shadow-sm);
+    padding:13px 8px 12px;text-align:center}
+  .agent img{width:88px;height:88px;object-fit:cover;border:2.5px solid var(--ink);display:block;margin:0 auto}
+  .agent .nm{font-size:17px;font-weight:900;margin-top:9px}
+  .agent .role{font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:3px;line-height:1.22;text-transform:uppercase;letter-spacing:.03em}
+  .agent.siu{border-color:var(--quinn);box-shadow:4px 4px 0 var(--quinn)}
+  .agent.siu img{border-color:var(--quinn)}
+  .agent.siu .nm{color:var(--quinn)}
+  .oncall{display:inline-block;font-family:var(--mono);font-size:9px;font-weight:700;
+    background:var(--quinn);color:#fff;padding:2px 6px;margin-top:7px;letter-spacing:.05em}
+  /* case cards */
+  .case{flex:1;background:var(--paper);border:2.5px solid var(--ink);box-shadow:var(--shadow-sm);padding:16px 17px;display:flex;flex-direction:column}
+  .case .st{font-family:var(--mono);font-size:11px;font-weight:700;padding:3px 9px;display:inline-block;color:#fff;align-self:flex-start}
+  .case .nm{font-size:21px;font-weight:900;margin:11px 0 4px}
+  .case .d{font-size:13.5px;color:var(--muted);line-height:1.38}
+  .case .ag{font-family:var(--mono);font-size:11.5px;margin-top:auto;padding-top:12px;font-weight:700}
+  /* stat cards */
+  .stat{flex:1;background:var(--paper);border:2.5px solid var(--ink);box-shadow:var(--shadow);padding:18px 22px}
+  .stat .n{font-size:50px;font-weight:900;line-height:.95;letter-spacing:-.03em}
+  .stat .c{font-family:var(--mono);font-size:13px;color:var(--muted);margin-top:8px;line-height:1.28}
+  .stat .u{height:4px;width:46px;background:var(--signal);margin:9px 0}
+  /* numbered flow */
+  .step{flex:1;background:var(--paper);border:2.5px solid var(--ink);box-shadow:var(--shadow-sm);padding:13px 12px}
+  .step .k{font-family:var(--mono);font-weight:700;font-size:12px;color:var(--coord)}
+  .step.siu .k{color:var(--quinn)}
+  .step .t{font-size:15.5px;font-weight:900;margin:7px 0 4px;line-height:1.05}
+  .step .d{font-size:11px;color:var(--muted);line-height:1.28}
+  .bullets{list-style:none;margin-top:18px}
+  .bullets li{position:relative;padding-left:26px;margin-bottom:12px;font-size:17.5px;
+    font-weight:600;line-height:1.32;max-width:760px}
+  .bullets li::before{content:"";position:absolute;left:0;top:5px;width:9px;height:23px;
+    background:var(--signal);border:2px solid var(--ink)}
+  .shot{border:2.5px solid var(--ink);box-shadow:var(--shadow);display:block;width:100%}
+  .logo{display:block}
+  /* architecture */
+  .arch{display:flex;flex-direction:column;gap:13px;margin-top:20px}
+  .lane{display:flex;align-items:center;gap:10px}
+  .box{flex:1 1 0;min-width:0;background:var(--paper);border:2.5px solid var(--ink);
+    box-shadow:var(--shadow-sm);padding:11px 14px;font-weight:800;font-size:14px;line-height:1.15}
+  .box .s{font-family:var(--mono);font-weight:400;font-size:11px;color:var(--muted);display:block;margin-top:3px}
+  .conn{flex:0 0 auto;font-family:var(--mono);font-size:11px;color:var(--muted);font-weight:700;white-space:nowrap}
+  /* quote / transcript excerpt */
+  .quote{border:2.5px solid var(--ink);box-shadow:var(--shadow);background:var(--paper)}
+  .quote .hd{background:var(--coord);color:#fff;font-family:var(--mono);font-weight:700;
+    text-transform:uppercase;letter-spacing:.08em;font-size:12px;padding:7px 14px;display:flex;justify-content:space-between}
+  .quote .bd{padding:16px 18px;font-size:16px;line-height:1.5}
+  .mchip{font-family:var(--mono);font-weight:700;font-size:14px;background:var(--quinn);color:#fff;padding:1px 8px}
+</style>
+</head>
+<body>
+
+<!-- 1 · TITLE -->
+<section class="slide dark" style="justify-content:center">
+  <div style="position:absolute;top:56px;left:72px" class="eyebrow">Band of Agents Hackathon · lablab.ai</div>
+  <div style="position:absolute;top:56px;right:72px" class="eyebrow">Track 3 — Regulated &amp; High-Stakes</div>
+  <div class="logo" style="width:740px;margin:0 auto"><!--LOGO_LIGHT--></div>
+  <div style="text-align:center;margin-top:28px;font-size:30px;font-weight:800;letter-spacing:-.01em">
+    Adversarial Claims Adjudication
+  </div>
+  <div class="muted" style="text-align:center;margin-top:15px;font-size:18px;max-width:820px;margin-left:auto;margin-right:auto;line-height:1.45">
+    A panel of AI agents puts every disputed claim on trial — and dynamically
+    <strong style="color:#f5d90a">recruits a 6th investigator the moment fraud is alleged.</strong>
+    The debate <em>becomes</em> the legally-defensible audit trail.
+  </div>
+  <div style="display:flex;gap:13px;justify-content:center;margin-top:32px;flex-wrap:wrap">
+    <span class="tag">recourseband.duckdns.org</span>
+    <span class="tag">Live in production</span>
+    <span class="tag">6 Band agents · dynamic recruitment</span>
+  </div>
+</section>
+
+<!-- 2 · PROBLEM -->
+<section class="slide">
+  <div class="eyebrow" style="color:var(--alex)">The Problem</div>
+  <h1 style="font-size:45px;margin-top:10px;max-width:1000px">
+    A denied claim. A dispute.<br/>And no record of how the call was made.
+  </h1>
+  <ul class="bullets" style="margin-top:18px">
+    <li>Appeals are decided by one overworked reviewer, under time pressure, with no one arguing the other side.</li>
+    <li>The reasoning lives in someone's head — not on paper. Regulators and customers can't see <em>why</em>.</li>
+    <li>Fraud is flagged on a hunch — claims get denied on suspicion, with no investigation on the record.</li>
+    <li>When a decision is challenged months later, there is no defensible trail to stand behind.</li>
+  </ul>
+  <div class="row" style="margin-top:auto;margin-bottom:24px">
+    <div class="stat"><div class="n">1</div><div class="u"></div><div class="c">reviewer per appeal — no adversary, no second lens</div></div>
+    <div class="stat"><div class="n">Hours</div><div class="u"></div><div class="c">of manual policy cross-referencing per case</div></div>
+    <div class="stat"><div class="n">Zero</div><div class="u"></div><div class="c">structured audit trail of the reasoning</div></div>
+  </div>
+  <div class="footer"><span>Recourse — Adversarial Claims Adjudication</span><span>02 / 14</span></div>
+</section>
+
+<!-- 3 · THE PANEL (6 agents) -->
+<section class="slide">
+  <div class="eyebrow" style="color:var(--sam)">The Solution</div>
+  <h1 style="font-size:46px;margin-top:12px;max-width:1060px">A standing panel of five — plus an investigator on call.</h1>
+  <p class="muted" style="font-size:17px;margin-top:13px;max-width:980px;line-height:1.42">
+    A Coordinator convenes specialist agents in a single Band room. Each owns one job, they argue
+    in the open, and converge on a resolution — with a human officer holding the final word.
+  </p>
+  <div class="panel">
+    <div class="agent"><img src="shots/agents/coordinator.png" alt="Coordinator"/>
+      <div class="nm">Coordinator</div><div class="role">Orchestrator · routes every handoff</div></div>
+    <div class="agent"><img src="shots/agents/blake.png" alt="Blake"/>
+      <div class="nm">Blake</div><div class="role">Claims Evaluator · argues for the insured</div></div>
+    <div class="agent"><img src="shots/agents/morgan.png" alt="Morgan"/>
+      <div class="nm">Morgan</div><div class="role">Policy Analyst · cites the clauses (RAG)</div></div>
+    <div class="agent"><img src="shots/agents/alex.png" alt="Alex"/>
+      <div class="nm">Alex</div><div class="role">Devil's Advocate · fights to deny</div></div>
+    <div class="agent"><img src="shots/agents/sam.png" alt="Sam"/>
+      <div class="nm">Sam</div><div class="role">Resolution Notary · signs the record</div></div>
+    <div class="agent siu"><img src="shots/agents/quinn.png" alt="Quinn"/>
+      <div class="nm">Quinn</div><div class="role">Special Investigations Unit</div>
+      <span class="oncall">◉ ON-CALL</span></div>
+  </div>
+  <div class="footer"><span>Recourse — Adversarial Claims Adjudication</span><span>03 / 14</span></div>
+</section>
+
+<!-- 4 · DYNAMIC RECRUITMENT (the differentiator) -->
+<section class="slide">
+  <div class="eyebrow" style="color:var(--quinn)">The differentiator · dynamic agent discovery</div>
+  <h1 style="font-size:42px;margin-top:12px;max-width:1040px">The panel grows itself — only when the case demands it.</h1>
+  <div class="row" style="gap:34px;margin-top:22px;align-items:stretch">
+    <div style="flex:1.05;display:flex;flex-direction:column">
+      <ul class="bullets" style="margin-top:0">
+        <li>Quinn is <strong>not pre-wired</strong> into every case — the panel stays at five.</li>
+        <li>When the denial rests on a <strong>fraud / misrepresentation</strong> claim, the Coordinator
+          <strong>recruits Quinn mid-debate</strong> via Band <span class="mono">add_participant</span>.</li>
+        <li>Quinn weighs the allegation against the evidence — so a claim is <strong>never denied on
+          unproven suspicion</strong>.</li>
+        <li>No fraud alleged → no recruitment. The right agents, assembled per case.</li>
+      </ul>
+      <div class="brut" style="margin-top:auto;padding:14px 18px;background:var(--signal);box-shadow:var(--shadow)">
+        <div class="mono" style="font-weight:700;font-size:11.5px;letter-spacing:.1em;text-transform:uppercase">Feature-flagged</div>
+        <div style="font-size:17px;font-weight:800;margin-top:5px;line-height:1.2">
+          No Quinn credentials → the panel runs as the standing five. Zero risk, no code change.
+        </div>
+      </div>
+    </div>
+    <div style="flex:1.25;display:flex;flex-direction:column;justify-content:center">
+      <div class="quote">
+        <div class="hd"><span>Coordinator</span><span>Live · Band room</span></div>
+        <div class="bd">
+          An allegation of a <strong>staged / misrepresented loss</strong> is in play and turns on
+          evidence, not argument. <strong>Recruiting</strong> <span class="mchip">@Quinn</span>
+          (Special Investigations Unit) into the room to examine whether the allegation is
+          substantiated before the panel rules.
+        </div>
+      </div>
+      <div class="mono muted" style="font-size:12.5px;margin-top:11px">
+        Captured live — the Coordinator pulls the investigator into the room mid-debate
+      </div>
+    </div>
+  </div>
+  <div class="footer"><span>Recourse — Adversarial Claims Adjudication</span><span>04 / 14</span></div>
+</section>
+
+<!-- 5 · HOW A VERDICT IS REACHED -->
+<section class="slide">
+  <div class="eyebrow">How it works</div>
+  <h1 style="font-size:46px;margin-top:12px">How a verdict is reached.</h1>
+  <div class="row" style="margin-top:26px;gap:12px">
+    <div class="step"><div class="k">01</div><div class="t">Intake</div><div class="d">Coordinator opens the case &amp; loads the policy.</div></div>
+    <div class="step"><div class="k">02</div><div class="t">Argue</div><div class="d">Blake makes the case for paying.</div></div>
+    <div class="step"><div class="k">03</div><div class="t">Policy</div><div class="d">Morgan cites the clauses (RAG).</div></div>
+    <div class="step"><div class="k">04</div><div class="t">Challenge</div><div class="d">Alex attacks the weakest points.</div></div>
+    <div class="step siu"><div class="k">05 ◉</div><div class="t">Investigate</div><div class="d">If fraud is alleged, Quinn (SIU) is recruited.</div></div>
+    <div class="step"><div class="k">06</div><div class="t">Compile</div><div class="d">Coordinator assembles the record + math.</div></div>
+    <div class="step"><div class="k">07</div><div class="t">Notarize</div><div class="d">Sam writes the signed resolution.</div></div>
+    <div class="step"><div class="k">08</div><div class="t">Sign-off</div><div class="d">A human officer approves or overrides.</div></div>
+  </div>
+  <div class="brut" style="margin-top:30px;padding:22px 28px;background:var(--signal);box-shadow:var(--shadow)">
+    <div class="mono" style="font-weight:700;font-size:13px;letter-spacing:.1em;text-transform:uppercase">The key idea</div>
+    <div style="font-size:26px;font-weight:900;margin-top:8px;letter-spacing:-.01em">
+      The conversation <em>is</em> the audit trail. Every message is persisted, ordered, and hashed.
+    </div>
+  </div>
+  <div class="footer"><span>Recourse — Adversarial Claims Adjudication</span><span>05 / 14</span></div>
+</section>
+
+<!-- 6 · THE 3-CASE DEMO -->
+<section class="slide">
+  <div class="eyebrow" style="color:var(--blake)">The demo · three live cases</div>
+  <h1 style="font-size:42px;margin-top:12px;max-width:1040px">The same panel, the right agents per case.</h1>
+  <p class="muted" style="font-size:16px;margin-top:12px;max-width:980px;line-height:1.4">
+    Recruitment is <em>discriminating</em>: a clean collision runs five agents; a fraud allegation
+    pulls in the sixth. Judges can run either pending case live.
+  </p>
+  <div class="row" style="margin-top:22px;gap:16px;flex:1">
+    <div class="case">
+      <span class="st" style="background:var(--muted)">PENDING · RUN LIVE</span>
+      <div class="nm">David Chen</div>
+      <div class="d">$12,000 collision denial. No fraud alleged — a straight coverage dispute.</div>
+      <div class="ag" style="color:var(--muted)">→ 5 agents · Quinn NOT recruited</div>
+    </div>
+    <div class="case" style="border-color:var(--quinn);box-shadow:4px 4px 0 var(--quinn)">
+      <span class="st" style="background:var(--quinn)">PENDING · RUN LIVE</span>
+      <div class="nm">Lisa Park</div>
+      <div class="d">$4,200 theft, denied as alleged undisclosed commercial use — a fraud theory.</div>
+      <div class="ag" style="color:var(--quinn)">→ 6 agents · Quinn recruited LIVE</div>
+    </div>
+    <div class="case">
+      <span class="st" style="background:var(--sam)">CLOSED · SHOWCASE</span>
+      <div class="nm">Marcus Reyes</div>
+      <div class="d">$9,300 fire, denied as a suspected staged loss. Pre-adjudicated, officer-signed.</div>
+      <div class="ag" style="color:var(--sam)">→ 6 agents · full SIU transcript</div>
+    </div>
+  </div>
+  <div class="footer"><span>Recourse — Adversarial Claims Adjudication</span><span>06 / 14</span></div>
+</section>
+
+<!-- 7 · EVIDENCE -->
+<section class="slide">
+  <div class="row" style="gap:38px;height:100%;align-items:stretch">
+    <div style="flex:1;display:flex;flex-direction:column">
+      <div class="eyebrow" style="color:var(--morgan)">Grounded in evidence</div>
+      <h1 style="font-size:38px;margin-top:13px">The debate is anchored to a real case file.</h1>
+      <ul class="bullets" style="margin-top:18px">
+        <li>Every case carries <strong>clickable evidence</strong> — police &amp; fire-marshal reports,
+          adjuster notes, scene photos.</li>
+        <li>Agents reference the documents <strong>by name</strong> as they argue — nothing is invented.</li>
+        <li>Quinn weighs the fraud allegation against <strong>origin reports, accelerants, motive,
+          prior claims</strong> — what the file actually shows.</li>
+        <li>Per-case galleries open inline — the evidence the panel reasoned over.</li>
+      </ul>
+    </div>
+    <div style="flex:1.05;display:flex;flex-direction:column;justify-content:center">
+      <img class="shot" src="shots/evidence_v4.png" alt="Supporting documents panel: fire marshal report, scene photos" />
+      <div class="mono muted" style="font-size:13px;margin-top:11px">Supporting documents — each opens the underlying report or photo gallery</div>
+    </div>
+  </div>
+  <div class="footer"><span>Recourse — Adversarial Claims Adjudication</span><span>07 / 14</span></div>
+</section>
+
+<!-- 8 · THE VERDICT -->
+<section class="slide">
+  <div class="row" style="gap:36px;height:100%;align-items:stretch">
+    <div style="flex:1;display:flex;flex-direction:column">
+      <div class="eyebrow" style="color:var(--sam)">The verdict</div>
+      <h1 style="font-size:37px;margin-top:13px">A signed result — built to survive a regulator.</h1>
+      <ul class="bullets" style="margin-top:18px">
+        <li>Sam issues a <strong>binding resolution</strong>: decision, payable amount, reasoning.</li>
+        <li>Every clause is <strong>cited by number</strong> — §5.2, §7.4 — never paraphrased.</li>
+        <li>The full transcript is <strong>SHA-256 hashed</strong> — tamper-evident on the record.</li>
+        <li>Payout is deterministic: <span class="mono">payable = claim − deductible</span>.</li>
+        <li>A human officer <strong>approves or overrides</strong> — accountability stays human.</li>
+      </ul>
+    </div>
+    <div style="flex:1.15;display:flex;flex-direction:column;justify-content:center">
+      <img class="shot" src="shots/resolution_v4.png" alt="Resolution panel: APPROVED $9,300, cited clauses, SIU finding, signed by the officer" />
+      <div class="mono muted" style="font-size:12.5px;margin-top:10px">APPROVED $9,300 — Quinn's SIU finding in the record, officer-signed</div>
+    </div>
+  </div>
+  <div class="footer"><span>Recourse — Adversarial Claims Adjudication</span><span>08 / 14</span></div>
+</section>
+
+<!-- 9 · THE OUTPUT (signed record + JSON) -->
+<section class="slide">
+  <div class="eyebrow" style="color:var(--coord)">The output · two ways to keep the record</div>
+  <h1 style="font-size:40px;margin-top:12px;max-width:1060px">A record a regulator can file — and a machine can verify.</h1>
+  <div class="row" style="margin-top:22px;gap:22px;flex:1">
+    <div style="flex:1;display:flex;flex-direction:column">
+      <img class="shot" src="shots/record_v4.png" alt="Signed printable Adjudication Record" style="flex:1;object-fit:cover;object-position:top" />
+      <div class="mono muted" style="font-size:12.5px;margin-top:9px"><strong>Signed Adjudication Record</strong> — printable, regulator-filable PDF</div>
+    </div>
+    <div style="flex:1;display:flex;flex-direction:column">
+      <img class="shot" src="shots/json_v4.png" alt="Machine-readable JSON export with transcript hash" style="flex:1;object-fit:cover;object-position:top" />
+      <div class="mono muted" style="font-size:12.5px;margin-top:9px"><strong>JSON export</strong> — full transcript + <span class="mono">sha256</span>, machine-verifiable</div>
+    </div>
+  </div>
+  <div class="footer"><span>Recourse — Adversarial Claims Adjudication</span><span>09 / 14</span></div>
+</section>
+
+<!-- 10 · ARCHITECTURE -->
+<section class="slide">
+  <div class="eyebrow">Architecture</div>
+  <h1 style="font-size:44px;margin-top:13px">One room. A streaming spine. A durable record.</h1>
+  <div class="arch">
+    <div class="lane">
+      <div class="box" style="min-width:190px">Next.js 14 — App Router<span class="s">Dashboard · live debate room · resolution</span></div>
+      <span class="conn">— SSE live stream →</span>
+      <div class="box" style="min-width:190px">FastAPI — Orchestrator<span class="s">Coordinator-driven turn engine</span></div>
+      <span class="conn">↕</span>
+      <div class="box grow">PostgreSQL + pgvector<span class="s">Claims, transcript, clause embeddings (RAG)</span></div>
+    </div>
+    <div class="lane">
+      <div class="box" style="background:var(--paper2)">Band — 5 standing agents + Quinn<span class="s">Coordinator · Blake · Morgan · Alex · Sam · Quinn recruited via add_participant</span></div>
+      <span class="conn">model providers →</span>
+      <div class="box">AI/ML API — GPT-4o<span class="s">Blake · Morgan · Sam · Quinn</span></div>
+      <div class="box">Featherless<span class="s">Hermes-2-Pro (Alex)</span></div>
+    </div>
+  </div>
+  <div class="row" style="margin-top:22px;flex-wrap:wrap;gap:11px">
+    <span class="chip">Dynamic recruitment via add_participant</span>
+    <span class="chip">Docker Compose on VPS</span>
+    <span class="chip">OpenLiteSpeed reverse proxy · Let's Encrypt TLS</span>
+    <span class="chip">SSE un-buffered</span>
+    <span class="chip">all-MiniLM-L6-v2 · 384-dim cosine</span>
+  </div>
+  <div class="footer"><span>Recourse — Adversarial Claims Adjudication</span><span>10 / 14</span></div>
+</section>
+
+<!-- 11 · LIVE PRODUCT -->
+<section class="slide">
+  <div class="eyebrow" style="color:var(--blake)">Live product</div>
+  <h1 style="font-size:36px;margin-top:10px;max-width:900px">Real agents argue it out, in the open.</h1>
+  <div style="margin-top:12px;width:720px;max-width:100%;margin-left:auto;margin-right:auto">
+    <img class="shot" src="shots/dashboard_v4.png" alt="Recourse dashboard: 6-agent standing panel, judge banner, 3-case docket" />
+    <div class="mono muted" style="font-size:12.5px;margin-top:10px;text-align:center">
+      The dashboard — the standing panel of six, the judge banner, and the three-case docket · Try it live at recourseband.duckdns.org
+    </div>
+  </div>
+  <div class="footer"><span>Recourse — Adversarial Claims Adjudication</span><span>11 / 14</span></div>
+</section>
+
+<!-- 12 · STACK & BAND INTEGRATION -->
+<section class="slide">
+  <div class="eyebrow">Stack &amp; Band integration</div>
+  <h1 style="font-size:42px;margin-top:13px">How we use Band — and the partner stack.</h1>
+  <div class="row" style="margin-top:24px;gap:18px">
+    <div class="brut grow" style="padding:22px 24px">
+      <div class="barlabel" style="background:var(--coord)">Band coordination</div>
+      <ul style="list-style:none;margin-top:13px;font-size:15px;line-height:1.48">
+        <li>• 5 standing agents in one room via the <strong>Agent API</strong></li>
+        <li>• <strong>Dynamic agent discovery</strong> — Quinn joins via <span class="mono">add_participant</span></li>
+        <li>• Visibility model respected — agents act on <strong>@mentions</strong></li>
+        <li>• Structured <strong>agent-to-agent handoffs</strong> drive turn order</li>
+        <li>• The room transcript is the system of record</li>
+      </ul>
+    </div>
+    <div class="brut grow" style="padding:22px 24px">
+      <div class="barlabel" style="background:var(--morgan)">Retrieval &amp; reasoning</div>
+      <ul style="list-style:none;margin-top:13px;font-size:15px;line-height:1.48">
+        <li>• Policy clauses embedded with <strong>MiniLM</strong> (384-dim)</li>
+        <li>• <strong>pgvector</strong> cosine search grounds every citation</li>
+        <li>• GPT-4o for Blake · Morgan · Sam · Quinn</li>
+        <li>• Hermes-2-Pro (Featherless) for Alex, GPT-4o failover</li>
+      </ul>
+    </div>
+  </div>
+  <div class="row" style="margin-top:22px;flex-wrap:wrap;gap:11px">
+    <span class="chip">Band SDK</span><span class="chip">AI/ML API</span><span class="chip">Featherless AI</span>
+    <span class="chip">FastAPI · async SQLAlchemy</span><span class="chip">Next.js 14 · TS · Tailwind</span>
+    <span class="chip">Postgres 16 · pgvector</span><span class="chip">Docker · OpenLiteSpeed</span>
+  </div>
+  <div class="footer"><span>Recourse — Adversarial Claims Adjudication</span><span>12 / 14</span></div>
+</section>
+
+<!-- 13 · WHY IT MATTERS -->
+<section class="slide">
+  <div class="eyebrow" style="color:var(--sam)">Why it matters</div>
+  <h1 style="font-size:44px;margin-top:13px;max-width:1040px">Regulated decisions, made defensible.</h1>
+  <div class="row" style="margin-top:28px;gap:18px">
+    <div class="brut grow" style="padding:20px 22px">
+      <div style="font-size:21px;font-weight:900">Adversarial by design</div>
+      <p class="muted" style="font-size:14.5px;margin-top:8px;line-height:1.42">
+        A dedicated devil's advocate and an on-call investigator mean no weakness — and no fraud
+        theory — goes unexamined.
+      </p>
+    </div>
+    <div class="brut grow" style="padding:20px 22px">
+      <div style="font-size:21px;font-weight:900">Defensible by record</div>
+      <p class="muted" style="font-size:14.5px;margin-top:8px;line-height:1.42">
+        The conversation is the audit trail — ordered, hashed, exportable as a signed PDF or
+        machine-readable JSON.
+      </p>
+    </div>
+    <div class="brut grow" style="padding:20px 22px">
+      <div style="font-size:21px;font-weight:900">Human-in-command</div>
+      <p class="muted" style="font-size:14.5px;margin-top:8px;line-height:1.42">
+        The panel recommends; a human officer signs off or overrides. Accountability never leaves
+        a person.
+      </p>
+    </div>
+  </div>
+  <div class="row" style="margin-top:26px">
+    <div class="stat"><div class="n">6</div><div class="u"></div><div class="c">specialist agents — assembled per case</div></div>
+    <div class="stat"><div class="n">SHA-256</div><div class="u"></div><div class="c">tamper-evident transcript on every record</div></div>
+    <div class="stat"><div class="n">Live</div><div class="u"></div><div class="c">in production — judges can run it now</div></div>
+  </div>
+  <div class="footer"><span>Recourse — Adversarial Claims Adjudication</span><span>13 / 14</span></div>
+</section>
+
+<!-- 14 · CLOSE -->
+<section class="slide dark" style="justify-content:center;align-items:center;text-align:center">
+  <div class="logo" style="width:620px"><!--LOGO_LIGHT--></div>
+  <div style="height:4px;width:120px;background:var(--signal);margin:32px auto 0"></div>
+  <div style="font-size:30px;font-weight:800;margin-top:28px">Every claim deserves a fair fight.</div>
+  <div class="muted" style="font-size:18px;margin-top:14px;max-width:720px;line-height:1.45">
+    Adversarial adjudication, on the record — with the right agents recruited per case, and live in
+    production today.
+  </div>
+  <div style="display:flex;gap:13px;justify-content:center;margin-top:30px;flex-wrap:wrap">
+    <span class="tag">recourseband.duckdns.org</span>
+    <span class="tag">Built for the Band of Agents Hackathon</span>
+  </div>
+</section>
+
+</body>
+</html>
