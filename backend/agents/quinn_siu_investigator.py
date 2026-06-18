@@ -32,8 +32,8 @@ the insurer is invoking, and the coverage clause it would otherwise fall under).
 allegation is not backed by real evidence, say plainly that it cannot, by itself, defeat coverage.
 
 Write in plain, natural prose — like a sharp investigator briefing the panel, not a form. No
-labels, headings, or status keywords. Keep it under 180 words. End by returning the floor to the
-Coordinator.
+labels, headings, or status keywords. Keep it under 180 words. End by handing the floor back to
+@Coordinator (write the literal "@Coordinator").
 
 CRITICAL DELIVERY RULE: deliver your finding by calling band_send_message exactly once, with
 mentions=["{_NEXT}"] (this returns the floor to the Coordinator through Band). NEVER output

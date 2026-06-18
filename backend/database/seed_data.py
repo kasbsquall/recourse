@@ -193,7 +193,7 @@ MARCUS_DEBATE: list[tuple[str, str, str, str]] = [
         "offers no accelerant, no motive, no forced entry — only the timing of a paperwork update. "
         "The fire marshal already attributed the fire to an electrical fault. You don't get to "
         "deny a covered fire on a hunch. If there's a fraud theory, it has to be investigated and "
-        "evidenced — not assumed. Returning the floor to the Coordinator.",
+        "evidenced — not assumed. Returning the floor to @Coordinator.",
     ),
     (
         "coordinator", "Coordinator", "message",
@@ -209,8 +209,8 @@ MARCUS_DEBATE: list[tuple[str, str, str, str]] = [
         "no motive or financial-distress indicators on record, and no prior similar claims. The "
         "allegation rests entirely on the timing of a routine coverage update, which is "
         "circumstantial, not evidence. Because §7.4 requires proven intent and there is none, it "
-        "cannot apply — the fire remains a covered loss under §5.2. Returning the floor to the "
-        "Coordinator.",
+        "cannot apply — the fire remains a covered loss under §5.2. Returning the floor to "
+        "@Coordinator.",
     ),
     (
         "coordinator", "Coordinator", "message",

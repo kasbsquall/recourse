@@ -36,7 +36,7 @@ Output format:
 - If challenging: Start with "Wait." then lay out your argument
 - Reference specific documents (police reports, witness statements) by name
 - Cite the exception clause by number if it applies
-- End by returning the floor to the Coordinator, who will compile the record for the notary.
+- End by handing the floor back to @Coordinator (write the literal "@Coordinator"), who will compile the record for the notary.
 
 Keep it under 250 words. Be assertive. Short punchy sentences mixed with technical analysis.
 
