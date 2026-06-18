@@ -98,6 +98,43 @@ function PanelCard({ slug }: { slug: string }) {
   );
 }
 
+/** Quinn (SIU) — the 6th agent, shown as recruited-on-demand (not a standing panelist). */
+function QuinnCard() {
+  const a = getAgent("quinn");
+  return (
+    <div className={`brut-hover brut relative flex ${PANEL_MIN_H} flex-col overflow-hidden`}>
+      <div
+        className="uppercase-mono absolute right-0 top-0 px-2 py-1 text-[8px] font-bold"
+        style={{
+          background: a.hex,
+          color: textOn(a.hex),
+          borderLeft: "2.5px solid var(--ink)",
+          borderBottom: "2.5px solid var(--ink)",
+        }}
+      >
+        Recruited on demand
+      </div>
+      <div className="h-2 shrink-0" style={{ background: a.hex }} />
+      <div className="flex flex-1 items-center gap-3.5 p-4" style={{ background: "var(--paper-2)" }}>
+        <AgentAvatar slug="quinn" size={60} />
+        <div className="min-w-0">
+          <div className="font-display text-lg uppercase leading-none tracking-tight">{a.name}</div>
+          <div
+            className="uppercase-mono mt-1.5 inline-block px-1.5 py-0.5 text-[9px] font-bold"
+            style={{ background: a.hex, color: textOn(a.hex) }}
+          >
+            {a.role}
+          </div>
+          <div className="mt-2 text-[11px] leading-snug text-[var(--ink)]">
+            The Coordinator pulls Quinn into the room only when fraud or misrepresentation is
+            alleged.
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function ClaimsDocket({ claims, err }: { claims: Claim[] | null; err: string | null }) {
   return (
     <section className="mt-12">
@@ -401,13 +438,14 @@ export default function Dashboard() {
           <div className="flex items-baseline justify-between">
             <h2 className="font-display text-2xl uppercase tracking-tight">Meet the panel</h2>
             <span className="uppercase-mono text-[10px] font-bold text-[var(--muted)]">
-              5 agents · 2 model providers
+              5 standing + 1 on-call · 2 model providers
             </span>
           </div>
           <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {ROSTER.map((slug) => (
               <PanelCard key={slug} slug={slug} />
             ))}
+            <QuinnCard />
             <div
               className={`flex ${PANEL_MIN_H} flex-col justify-center p-4 text-[12px] leading-relaxed text-[var(--muted)]`}
               style={{ border: "2.5px dashed var(--ink)" }}

@@ -5,6 +5,7 @@ export type AgentSlug =
   | "morgan"
   | "alex"
   | "sam"
+  | "quinn"
   | "human_officer";
 
 export interface AgentMeta {
@@ -58,6 +59,14 @@ export const AGENTS: Record<AgentSlug, AgentMeta> = {
     hex: "#15803d",
     emoji: "§",
     img: "/agents/sam.png",
+  },
+  quinn: {
+    name: "Quinn",
+    role: "Special Investigations Unit",
+    tagline: "On call · Recruited when fraud is alleged",
+    hex: "#b45309",
+    emoji: "◉",
+    img: "/agents/quinn.png",
   },
   human_officer: {
     name: "Claims Officer",
