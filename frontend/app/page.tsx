@@ -362,11 +362,11 @@ export default function Dashboard() {
             <div className="uppercase-mono mb-3 text-[10px] font-bold text-[var(--muted)]">
               The standing panel
             </div>
-            <div className="flex items-end justify-between gap-1">
+            <div className="flex items-end gap-1">
               {ROSTER.map((slug) => {
                 const a = getAgent(slug);
                 return (
-                  <div key={slug} className="flex w-12 flex-col items-center gap-1.5">
+                  <div key={slug} className="flex flex-1 flex-col items-center gap-1.5">
                     <AgentAvatar slug={slug} size={48} />
                     <span className="uppercase-mono whitespace-nowrap text-[9px] font-bold">
                       {a.name}
@@ -374,6 +374,21 @@ export default function Dashboard() {
                   </div>
                 );
               })}
+              {/* divider — Quinn sits apart: recruited on demand, not a standing member */}
+              <div
+                className="mx-0.5 mb-5 h-9 w-px shrink-0"
+                style={{ background: "var(--ink)", opacity: 0.35 }}
+              />
+              <div className="flex flex-1 flex-col items-center gap-1" style={{ opacity: 0.7 }}>
+                <AgentAvatar slug="quinn" size={48} />
+                <span className="uppercase-mono whitespace-nowrap text-[9px] font-bold">Quinn</span>
+                <span
+                  className="uppercase-mono whitespace-nowrap text-[7px] font-bold leading-none"
+                  style={{ color: getAgent("quinn").hex }}
+                >
+                  On call
+                </span>
+              </div>
             </div>
             <div className="mt-4 border-t-2 border-[var(--ink)] pt-3 text-[11px] leading-snug text-[var(--muted)]">
               Coordinator opens → Blake &amp; Morgan weigh coverage → Alex challenges → Sam rules →
