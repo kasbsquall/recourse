@@ -42,14 +42,14 @@ fraud/misrepresentation claim, the Coordinator pulls in the investigator to test
 
 The entire conversation is persisted, ordered, and **SHA-256 hashed** — tamper-evident
 on the record. A human claims officer then **approves or overrides** the resolution, and
-the closed case is downloadable as a **signed Adjudication Record**.
+the closed case is downloadable as an **officer-signed, SHA-256-stamped Adjudication Record** — printable to PDF, plus a machine-verifiable JSON export.
 
 ## See it in action
 
 | | |
 |:---|:---|
 | ![Dynamic recruitment](docs/shot-recruit.png)<br>**Dynamic recruitment** — the Coordinator pulls Quinn (SIU) into the live room, mid-debate, only when fraud is alleged | ![Signed verdict](docs/shot-verdict.png)<br>**Signed verdict** — APPROVED with cited clauses, the SIU finding, and the human officer's sign-off |
-| ![Signed record](docs/shot-record.png)<br>**Signed record** — a printable, regulator-filable Adjudication Record | ![JSON export](docs/shot-json.png)<br>**JSON export** — the full transcript + SHA-256 hash, machine-verifiable |
+| ![Signed record](docs/shot-record.png)<br>**Signed record** — the officer-signed, SHA-256-stamped record, printable to PDF | ![JSON export](docs/shot-json.png)<br>**JSON export** — the full transcript + SHA-256 hash, machine-verifiable |
 
 Each case also carries **clickable evidence** (police / fire-marshal reports, scene photos) the
 panel reasons over — so nothing is invented.
