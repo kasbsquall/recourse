@@ -26,7 +26,7 @@
   const shots = [
     ["theft-1.jpg", "Dashboard — stereo head unit removed, harness exposed"],
     ["theft-2.jpg", "Exhaust — catalytic converter cut out (fresh saw marks)"],
-    ["theft-3.jpg", "Passenger window — pry marks (forced entry); no rideshare livery"],
+    ["theft-3.jpg", "Vehicle at residence — ordinary personal car, no rideshare livery or signage"],
   ];
   document.getElementById("grid").innerHTML = shots.map(([src, cap]) =>
     `<figure><img src="${src}" alt="${cap}" onerror="this.outerHTML='<div class=\\'ph\\'>Photo ${src} — add to /public/docs/</div>'"><figcaption>${cap}</figcaption></figure>`
