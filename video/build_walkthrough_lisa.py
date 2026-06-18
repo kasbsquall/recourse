@@ -1,11 +1,12 @@
-"""Build the trimmed LIVE walkthrough from the Lisa Park raw recording (6 agents, incl. Quinn/SIU).
+"""Build the trimmed LIVE walkthrough from the Lisa Park raw recording (6 agents, incl. Quinn/SIU),
+now with the post-verdict export beats (machine-readable JSON + signed printable record).
 
-Keeps the real production run but cuts the ~67s dead-air (Alex waiting on Featherless) down to a
-short 'deliberating' beat, burns brand caption chips per phase — including the dynamic SIU
-recruitment beat — and bookends it with a title + end card over a soft music bed.
+Cuts the white page-load frames at the start, keeps the real run, trims the inter-agent dead air to
+a short 'deliberating' beat, and ends on the two export stills captured during the same run.
 
 Run:  uv run --with pillow python video/build_walkthrough_lisa.py
 """
+import json
 import subprocess
 from pathlib import Path
 
@@ -17,6 +18,8 @@ ASSETS = HERE / "assets"
 WT = HERE / "_wt_lisa"
 WT.mkdir(exist_ok=True)
 OUT = HERE / "walkthrough_lisa.mp4"
+
+M = json.loads((HERE / "timestamps_lisa.json").read_text())
 
 W, H = 1920, 1080
 BG = (11, 11, 12)
@@ -77,7 +80,7 @@ BAR_TOP, BAR_BOT = 958, 1060
 def make_caption(idx, total, tag, text, mono=False, accent=YELLOW):
     img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
     d = ImageDraw.Draw(img)
-    d.rectangle([0, BAR_TOP, W, BAR_BOT], fill=(8, 8, 9, 214))
+    d.rectangle([0, BAR_TOP, W, BAR_BOT], fill=(8, 8, 9, 220))
     d.rectangle([0, BAR_TOP, 12, BAR_BOT], fill=accent)
     d.text((48, BAR_TOP + 14), tag, font=f_mono, fill=accent)
     font = f_mono if mono else f_disp
@@ -91,49 +94,77 @@ def make_caption(idx, total, tag, text, mono=False, accent=YELLOW):
     return p
 
 
-# (tag, main text, mono?, accent)
+# ---- segment plan (raw-time) ----------------------------------------------
+PAINT = 4.5                       # dashboard has painted by here (cuts the white load frames)
+A0, A1 = PAINT, M["morgan"] + 2.0
+DELIB = 1.5
+C0, C1 = M["alex"] - 1.0, M["hash"] + 1.5
+JSON_D, REC_D = 3.0, 3.5
+lenA, lenC = A1 - A0, C1 - C0
+
+
+def bA(raw):
+    return raw - A0
+
+
+def bC(raw):
+    return (raw - C0) + lenA + DELIB
+
+
+body_end = lenA + DELIB + lenC
+json_end = body_end + JSON_D
+rec_end = json_end + REC_D
+
+# (tag, text, mono?, accent)
 CAPS = [
     ("THE CLAIM", "Lisa Park · $4,200 theft — denied as alleged commercial use", False, YELLOW),
     ("THE EVIDENCE", "Clickable evidence — police report, scene photos, adjuster note", False, YELLOW),
     ("THE ROOM", "Open the adjudication room — agents convene in one Band room", False, YELLOW),
     ("ARGUE", "Blake argues for the insured — theft is covered under §5.2", False, YELLOW),
     ("POLICY · RAG", "Morgan cites the governing clauses — §5.2, §7.4", False, YELLOW),
-    ("DELIBERATING", ">>  Adversarial review in progress…", True, GRAY),
     ("CHALLENGE", "Alex attacks the denial — no rideshare records on file", False, YELLOW),
     ("RECRUIT · SIU", "Fraud alleged → Quinn (SIU) recruited live · finds it unproven", False, AMBER),
     ("NOTARIZE", "Sam compiles the signed, reasoned resolution", False, YELLOW),
-    ("THE VERDICT", "APPROVED — the human officer has the final word", False, YELLOW),
+    ("THE VERDICT", "APPROVED $3,700 — tamper-evident · the officer has the final word", False, YELLOW),
+    ("EXPORT · JSON", "Export the full record as machine-readable JSON", False, CYAN),
+    ("SIGNED RECORD", "One click → a signed, printable adjudication record", False, CYAN),
 ]
-# body-time window boundaries (seconds) — 10 windows
-WIN = [0.0, 8.0, 15.5, 24.0, 28.5, 32.5, 34.5, 41.5, 47.5, 51.0, 59.5]
+WIN = [
+    0.0, 7.0, 12.0, bA(M["blake"]), bA(M["morgan"]), lenA + DELIB,
+    bC(M["quinn"]) - 2.0, bC(M["sam"]) - 1.0, bC(M["verdict"]), body_end, json_end, rec_end,
+]
 
 title_png = make_title()
 cap_pngs = [make_caption(i + 1, len(CAPS), t, txt, m, a) for i, (t, txt, m, a) in enumerate(CAPS)]
 
-# hold frame for the deliberating beat (mid dead-air, Alex pending)
-subprocess.run(["ffmpeg", "-v", "error", "-y", "-ss", "65", "-i", str(RAW),
+# deliberating hold frame (mid morgan->alex gap)
+hold_t = (M["morgan"] + M["alex"]) / 2
+subprocess.run(["ffmpeg", "-v", "error", "-y", "-ss", f"{hold_t}", "-i", str(RAW),
                 "-frames:v", "1", str(WT / "hold_delib.png")], check=True)
 
 # ---- PASS A: body segments + captions -------------------------------------
-# A = trim 0.5:33.0 (32.5)   B = hold 2.0   C = trim 96.0:121.0 (25.0)  -> 59.5
 inputs_a = [
-    "-i", str(RAW),                                                  # 0
-    "-loop", "1", "-t", "2.0", "-i", str(WT / "hold_delib.png"),     # 1
+    "-i", str(RAW),                                                       # 0
+    "-loop", "1", "-t", str(DELIB), "-i", str(WT / "hold_delib.png"),     # 1
+    "-loop", "1", "-t", str(JSON_D), "-i", str(ASSETS / "json_shot.png"), # 2
+    "-loop", "1", "-t", str(REC_D), "-i", str(ASSETS / "record_shot.png"),# 3
 ]
-for p in cap_pngs:                                                   # 2..11
+for p in cap_pngs:                                                        # 4..14
     inputs_a += ["-i", str(p)]
 
-norm = "fps=30,scale=1920:1080,setsar=1"
+norm = "fps=30,scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2:color=0x0b0b0c,setsar=1"
 fc = (
-    f"[0:v]trim=0.5:33.0,setpts=PTS-STARTPTS,{norm}[a];"
+    f"[0:v]trim={A0}:{A1},setpts=PTS-STARTPTS,{norm}[a];"
     f"[1:v]{norm},setpts=PTS-STARTPTS[b];"
-    f"[0:v]trim=96.0:121.0,setpts=PTS-STARTPTS,{norm}[c];"
-    f"[a][b][c]concat=n=3:v=1:a=0[body]"
+    f"[0:v]trim={C0}:{C1},setpts=PTS-STARTPTS,{norm}[c];"
+    f"[2:v]{norm},setpts=PTS-STARTPTS[j];"
+    f"[3:v]{norm},setpts=PTS-STARTPTS[r];"
+    f"[a][b][c][j][r]concat=n=5:v=1:a=0[body]"
 )
 prev = "body"
 for i in range(len(cap_pngs)):
     s, e = WIN[i], WIN[i + 1]
-    inp = i + 2
+    inp = i + 4
     out = f"o{i}"
     fc += f";[{prev}][{inp}:v]overlay=0:0:enable='between(t,{s},{e})'[{out}]"
     prev = out
@@ -143,11 +174,11 @@ body_mp4 = WT / "body_cap.mp4"
 subprocess.run(["ffmpeg", "-v", "error", "-y", *inputs_a, "-filter_complex", fc,
                 "-map", "[bc]", "-r", "30", "-c:v", "libx264", "-crf", "18",
                 "-preset", "medium", str(body_mp4)], check=True)
-print("pass A done ->", body_mp4)
+print(f"pass A done -> {body_mp4}  (body {rec_end:.1f}s)")
 
 # ---- PASS B: title + body + endcard + music -------------------------------
 TITLE_D, END_D = 3.0, 2.5
-total = TITLE_D + 59.5 + END_D  # 65.0
+total = TITLE_D + rec_end + END_D
 
 inputs_b = [
     "-loop", "1", "-t", str(TITLE_D), "-i", str(title_png),             # 0
@@ -155,10 +186,11 @@ inputs_b = [
     "-loop", "1", "-t", str(END_D), "-i", str(ASSETS / "endcard.png"),  # 2
     "-stream_loop", "-1", "-i", str(ASSETS / "music.mp3"),              # 3
 ]
+nb = "fps=30,scale=1920:1080,setsar=1"
 fc2 = (
-    f"[0:v]{norm},setpts=PTS-STARTPTS[t];"
-    f"[1:v]{norm},setpts=PTS-STARTPTS[m];"
-    f"[2:v]{norm},setpts=PTS-STARTPTS[e];"
+    f"[0:v]{nb},setpts=PTS-STARTPTS[t];"
+    f"[1:v]{nb},setpts=PTS-STARTPTS[m];"
+    f"[2:v]{nb},setpts=PTS-STARTPTS[e];"
     f"[t][m][e]concat=n=3:v=1:a=0,format=yuv420p[v];"
     f"[3:a]volume=0.16,afade=t=in:st=0:d=1.2,"
     f"afade=t=out:st={total-1.6}:d=1.6,atrim=0:{total}[au]"
@@ -167,4 +199,4 @@ subprocess.run(["ffmpeg", "-v", "error", "-y", *inputs_b, "-filter_complex", fc2
                 "-map", "[v]", "-map", "[au]", "-r", "30",
                 "-c:v", "libx264", "-crf", "18", "-preset", "medium",
                 "-c:a", "aac", "-b:a", "160k", "-shortest", str(OUT)], check=True)
-print("walkthrough ->", OUT, f"(~{total:.0f}s)")
+print(f"walkthrough -> {OUT}  (~{total:.0f}s)")

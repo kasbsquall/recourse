@@ -113,6 +113,33 @@ with sync_playwright() as p:
     except Exception as e:  # noqa: BLE001
         print("hash scroll skipped:", e)
 
+    # Capture the JSON export (audit endpoint) as a still for the walkthrough
+    ASSETS = OUT / "assets"
+    try:
+        with page.expect_popup() as pi:
+            page.get_by_role("link", name=re.compile("Export JSON")).click()
+        jp = pi.value
+        jp.wait_for_load_state("load", timeout=15000)
+        jp.wait_for_timeout(1200)
+        jp.screenshot(path=str(ASSETS / "json_shot.png"))
+        jp.close()
+        mark("json", t0)
+    except Exception as e:  # noqa: BLE001
+        print("json beat skipped:", e)
+
+    # Capture the signed, printable Adjudication Record (opens in a new tab) as a still
+    try:
+        with page.expect_popup() as pi2:
+            page.get_by_role("button", name=re.compile("Download Signed Record")).click()
+        rp = pi2.value
+        rp.wait_for_load_state("load", timeout=15000)
+        rp.wait_for_timeout(1500)
+        rp.screenshot(path=str(ASSETS / "record_shot.png"))
+        rp.close()
+        mark("record", t0)
+    except Exception as e:  # noqa: BLE001
+        print("record beat skipped:", e)
+
     page.wait_for_timeout(1500)
     mark("end", t0)
     ctx.close()
