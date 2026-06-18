@@ -386,6 +386,7 @@ async def seed() -> None:
                     {
                         "type": "police_report",
                         "ref": "MPD-2024-5567",
+                        "url": "/docs/MPD-2024-5567.html",
                         "summary": (
                             "Overnight theft of stereo and catalytic converter from a parked "
                             "vehicle outside the residence; reported within 24h; no indication of "
@@ -395,9 +396,19 @@ async def seed() -> None:
                     {
                         "type": "adjuster_note",
                         "ref": "ADJ-2024-3310",
+                        "url": "/docs/ADJ-2024-3310.html",
                         "summary": (
                             "Denial cites suspected undisclosed rideshare use — but no rideshare "
                             "records, trip logs, or commercial markings are offered as evidence."
+                        ),
+                    },
+                    {
+                        "type": "photos",
+                        "ref": "CLM-2024-03988-imgs",
+                        "url": "/docs/CLM-2024-03988-photos.html",
+                        "summary": (
+                            "3 photos: stereo removed from dash, catalytic converter cut from the "
+                            "exhaust, pried passenger window — no rideshare livery on the vehicle."
                         ),
                     },
                 ],
@@ -452,6 +463,7 @@ async def seed() -> None:
                 {
                     "type": "fire_marshal_report",
                     "ref": "FMO-2024-0832",
+                    "url": "/docs/FMO-2024-0832.html",
                     "summary": (
                         "Fire origin: electrical fault in the wiring harness. No accelerants "
                         "detected; no signs of forced entry or tampering. Consistent with an "
@@ -461,6 +473,7 @@ async def seed() -> None:
                 {
                     "type": "photos",
                     "ref": "CLM-2024-05120-imgs",
+                    "url": "/docs/CLM-2024-05120-photos.html",
                     "summary": "Scene photos showing engine-bay origin burn pattern.",
                 },
             ],
