@@ -166,6 +166,18 @@ def _parse_resolution(text: str) -> dict:
     return {"decision": decision, "approved_amount": amount, "cited_clauses": clauses}
 
 
+def _payable(amount: Decimal, deductible: Decimal) -> Decimal:
+    """Deterministic payout: requested amount minus the policy deductible, clamped at zero."""
+    return max(amount - deductible, Decimal("0"))
+
+
+def _transcript_hash(pairs: list[tuple[str, str]]) -> str:
+    """SHA-256 over the ordered `slug:content` transcript — the tamper-evident audit fingerprint.
+    Any later edit to the recorded debate changes the hash, so the resolution is self-verifying."""
+    blob = "\n".join(f"{slug}:{content}" for slug, content in pairs)
+    return hashlib.sha256(blob.encode("utf-8")).hexdigest()
+
+
 async def run_debate(claim_id: uuid.UUID) -> None:
     """Drive the full adjudication for a claim. Runs as a background task."""
     async with AsyncSessionLocal() as session:
@@ -431,7 +443,7 @@ async def _run_sam_turn(
     """
     amount = claim.amount_requested
     deductible = claim.policy.deductible if claim.policy else Decimal("0")
-    payable = max(amount - deductible, Decimal("0"))
+    payable = _payable(amount, deductible)
     thread = "\n\n".join(f"[{who}]:\n{text}" for who, text in context)
 
     routed_to_sam = (
@@ -501,8 +513,7 @@ async def _finalize(session, claim: Claim, resolution_text: str) -> None:
         .where(AgentMessage.claim_id == claim.id)
         .order_by(AgentMessage.sent_at)
     )).scalars().all()
-    transcript_blob = "\n".join(f"{m.agent_slug}:{m.content}" for m in rows)
-    transcript_sha256 = hashlib.sha256(transcript_blob.encode("utf-8")).hexdigest()
+    transcript_sha256 = _transcript_hash([(m.agent_slug, m.content) for m in rows])
 
     session.add(Resolution(
         claim_id=claim.id,

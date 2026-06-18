@@ -1,0 +1,2 @@
+# Dev / test dependencies (the app itself doesn't need these at runtime).
+pytest>=8

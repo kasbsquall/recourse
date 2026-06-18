@@ -103,6 +103,16 @@ npm run dev                                        # http://localhost:3000
 
 Copy `backend/.env.example` → `backend/.env` and fill in the Band / AI-ML / Featherless keys.
 
+### Tests
+```bash
+cd backend
+pip install -r requirements-dev.txt
+python -m pytest tests/ -q     # 40 unit tests — fraud-recruitment gate, payout, SHA-256 hash, verdict parsing
+```
+The suite covers the logic that must be provably correct: `_alleges_fraud` (the SIU-recruitment
+trigger), the deterministic payout, the tamper-evident transcript hash, and verdict parsing — all
+pure functions, so it needs no database, Band connection, or network.
+
 ## Deployment
 
 Production runs as a **Docker Compose stack on a VPS** (`db` · `backend` · `agents` ·
@@ -131,6 +141,7 @@ docker compose run --rm backend python database/seed_data.py   # seed the 3-case
 - [x] **Quinn (6th agent) — dynamically recruited mid-debate when fraud is alleged**
 - [x] FastAPI backend + debate orchestrator + SSE
 - [x] Frontend (dashboard, live debate room, resolution panel, signed-record download)
+- [x] **Unit tests** — 40 passing: fraud-recruitment gate, payout math, SHA-256 audit hash, verdict parsing
 - [x] **Deployed live** + demo video + pitch deck
 
 ## License
