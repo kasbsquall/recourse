@@ -126,87 +126,110 @@ SUPPORTING_DOCS = [
 ]
 
 
-# --- David Chen: a CLOSED case, pre-adjudicated & officer-ratified ---------------
-# Seeded with the full debate + signed resolution so a judge opening it sees a complete,
-# tamper-evident verdict the instant the page loads (no 1-2 min live wait). Lisa Park stays
-# PENDING (an "open" case) for a live run that also showcases dynamic SIU recruitment.
-DAVID_ROOM_ID = "rm_dc_adjudicated_0001"
+# --- The CLOSED showcase case: Marcus Reyes (fire claim, denied over a suspected staged loss) ---
+# This is the pre-adjudicated, officer-ratified case a judge sees the INSTANT the page loads —
+# and it deliberately runs the FULL six-agent flow INCLUDING the dynamic SIU recruitment: a
+# misrepresentation/"staged loss" allegation pulls @Quinn (Special Investigations Unit) into the
+# room, who finds the allegation unsubstantiated. David Chen and Lisa Park stay PENDING (open) so
+# judges can run a debate live (Lisa's "undisclosed commercial use" denial recruits Quinn live).
+MARCUS_ROOM_ID = "rm_mr_adjudicated_0007"
 
-DAVID_RESOLUTION_TEXT = (
+MARCUS_RESOLUTION_TEXT = (
     "DECISION: APPROVED\n"
-    "APPROVED AMOUNT: $12,000.00\n\n"
+    "APPROVED AMOUNT: $9,300.00\n\n"
     "LEGAL REASONING:\n"
-    "The claim is approved based on the exception in §12.1, which allows coverage of "
-    "mechanical failures directly and proximately caused by a covered collision event. The "
-    "certified mechanic report BM-AUTO-2024-089 and police report FHP-2024-10153 confirm the "
-    "engine seizure resulted from collision impact, not a pre-existing issue — negating the "
-    "application of §7.3 (Mechanical Failure Exclusion).\n\n"
+    "The vehicle fire is a covered comprehensive loss under §5.2. The denial relied on the §7.4 "
+    "exclusion for intentional damage, alleging a staged/misrepresented loss — but that exclusion "
+    "requires evidence of intent, and the Special Investigations Unit found none. The fire marshal "
+    "report FMO-2024-0832 attributes the fire to an electrical fault in the wiring harness, with no "
+    "accelerants detected and no signs of forced entry. The misrepresentation allegation is "
+    "unsubstantiated, so §7.4 does not apply and coverage stands under §5.2.\n\n"
     "DEBATE SUMMARY:\n"
-    "- Blake: Coverage analysis was initially unclear (~60% confidence) given the potential "
-    "applicability of §7.3.\n"
-    "- Morgan: Asserted that §7.3 does not apply because the §12.1 exception controls, "
-    "supporting coverage.\n"
-    "- Alex: Argued the denial overlooked §12.1 and advocated for approval on the evidence.\n\n"
+    "- Blake: Treated the fire as a covered §5.2 comprehensive loss; flagged the denial as "
+    "resting on suspicion rather than evidence (~60% confidence pending SIU review).\n"
+    "- Morgan: Confirmed §5.2 covers fire and that §7.4 excludes only proven intentional damage.\n"
+    "- Alex: Argued the denial inverted the burden of proof onto the insured.\n"
+    "- Quinn (SIU): Found the staged-loss allegation UNSUPPORTED — electrical origin, no "
+    "accelerants, no motive — so it cannot defeat coverage.\n\n"
     "CONFIDENCE: HIGH\n"
-    "RECOMMENDATION TO CLAIMS OFFICER: Approve the claim for $12,000.00 — the evidence and "
-    "policy language support coverage under the collision clause."
+    "RECOMMENDATION TO CLAIMS OFFICER: Approve the claim for $9,300.00 — a covered fire loss with "
+    "no substantiated evidence of misrepresentation."
 )
 
-# (slug, display_name, message_type, content) — ordered debate transcript.
-DAVID_DEBATE: list[tuple[str, str, str, str]] = [
+# (slug, display_name, message_type, content) — ordered debate transcript, INCLUDING Quinn (SIU).
+MARCUS_DEBATE: list[tuple[str, str, str, str]] = [
     (
         "coordinator", "Coordinator", "case_file",
-        "CASE FILE — Claim CLM-2024-04471 (Policy CPP-2024-8821, David Chen, Crestview Mutual "
-        "Insurance)\nIncident: collision on 2024-10-15 at I-95 North, near Fort Lauderdale, FL.\n"
-        "Vehicle struck guardrail at ~35 mph; airbags deployed; front-end and engine compartment "
-        "sustained severe damage; engine seized following impact. Police report FHP-2024-10153 "
-        "documents the accident; a witness confirms the vehicle lost control on guardrail contact "
-        "before the engine ceased operation.\nAmount requested: $12,500.00.\n"
-        "ORIGINAL DENIAL: denied per §7.3 — Mechanical Failure Exclusion; adjuster alleges "
-        "mechanical failure preceded the collision.\nSupporting documents: FHP-2024-10153 "
-        "(police report), BM-AUTO-2024-089 (certified mechanic report), CLM-2024-04471-imgs "
-        "(photos).\n\nThis denial is disputed. @Blake, begin your coverage analysis.",
+        "CASE FILE — Claim CLM-2024-05120 (Policy CPP-2024-6610, Marcus Reyes, Crestview Mutual "
+        "Insurance)\nIncident: vehicle fire on 2024-08-22 in Tampa, FL.\nThe parked vehicle caught "
+        "fire overnight and was a total loss. Fire marshal report FMO-2024-0832 documents the "
+        "scene.\nAmount requested: $9,800.00.\n"
+        "ORIGINAL DENIAL: denied per §7.4 — General Exclusions; adjuster alleges a possible "
+        "staged/intentional loss (misrepresentation), citing that the claim was filed shortly "
+        "after a routine coverage update.\nSupporting documents: FMO-2024-0832 (fire marshal "
+        "report — electrical origin, no accelerants), CLM-2024-05120-imgs (scene photos).\n\n"
+        "This denial is disputed. @Blake, begin your coverage analysis.",
     ),
     (
         "blake", "Blake", "message",
-        "This is a covered collision under §2.1 — direct physical damage from contact with the "
-        "guardrail. The denial rests entirely on §7.3, but the sequence matters: the engine "
-        "seized FOLLOWING the impact, not before it. The mechanic report (BM-AUTO-2024-089) "
-        "attributes the seizure to catastrophic impact damage to the oil pan and crankshaft — "
-        "consistent with a high-force collision, not pre-existing wear. My confidence that "
-        "coverage applies is moderate (~60%) pending the exact reading of §7.3 against any "
-        "collision-caused-failure carve-out. Handing off to @Morgan for the controlling clauses.",
+        "A vehicle fire is a covered comprehensive loss under §5.2 — fire is named explicitly. The "
+        "denial doesn't dispute that; it rests on §7.4 (intentional damage) via a *suspicion* of a "
+        "staged loss. But the fire marshal report (FMO-2024-0832) puts the origin as electrical, "
+        "with no accelerants — that points to an accidental loss, not arson. My confidence is "
+        "moderate (~60%) until the misrepresentation allegation is actually examined. @Morgan, the "
+        "controlling clauses.",
     ),
     (
         "morgan", "Morgan", "message",
-        "§7.3 excludes mechanical or electrical failure. BUT §12.1 — the Collision-Caused "
-        "Mechanical Failure Exception — states that, notwithstanding §7.3, mechanical failure "
-        "directly and proximately caused by a covered collision event, as evidenced by police "
-        "report, adjuster assessment, or certified mechanic report, SHALL be eligible under §2.1. "
-        "Here both FHP-2024-10153 and BM-AUTO-2024-089 establish the seizure was collision-caused. "
-        "§12.1 controls and restores coverage; the denial cited §7.3 in isolation and overlooked "
-        "§12.1. @Alex, pressure-test this.",
+        "§5.2 (Comprehensive Coverage) expressly covers fire. §7.4 (General Exclusions) excludes "
+        "*intentional* damage — but an exclusion the insurer invokes must be proven by the insurer; "
+        "the burden does not shift to the insured. Nothing quoted establishes intent. The timing of "
+        "a routine coverage update is not evidence of misrepresentation. On the policy language "
+        "alone, §5.2 controls unless §7.4 intent is substantiated. @Alex, pressure-test this.",
     ),
     (
         "alex", "Alex", "message",
-        "Wait — before we approve, the burden is on the evidence, and here it holds. The denial "
-        "overlooked §12.1, the exception that decides this. The mechanic and police reports both "
-        "confirm the seizure was caused by collision impact, not pre-existing wear — exactly the "
-        "trigger §12.1 requires. The photos (CLM-2024-04471-imgs) show front-end crushing "
-        "consistent with a 35 mph guardrail impact, corroborating the witness. Nothing in the file "
-        "shows prior mechanical issues. The denial leaned on §7.3 alone and ignored the controlling "
-        "exception. Approve under §12.1, less the deductible.",
+        "Wait — this denial inverts the burden of proof. The insurer alleges a staged loss but "
+        "offers no accelerant, no motive, no forced entry — only the timing of a paperwork update. "
+        "The fire marshal already attributed the fire to an electrical fault. You don't get to "
+        "deny a covered fire on a hunch. If there's a fraud theory, it has to be investigated and "
+        "evidenced — not assumed. Returning the floor to the Coordinator.",
     ),
     (
         "coordinator", "Coordinator", "message",
-        "Debate complete. Compiling the full record and routing it to @Sam for the binding "
-        "resolution. (Claim $12,500.00 · deductible $500.00 · payable in full $12,000.00.)",
+        "An allegation of a staged/misrepresented loss is in play and turns on evidence, not "
+        "argument. Recruiting @Quinn (Special Investigations Unit) into the room to examine whether "
+        "the misrepresentation allegation is substantiated before the panel rules.",
     ),
-    ("sam", "Sam", "resolution", DAVID_RESOLUTION_TEXT),
+    (
+        "quinn", "Quinn", "message",
+        "SIU finding: UNSUPPORTED. I reviewed the file against the staged-loss allegation. The fire "
+        "marshal report FMO-2024-0832 attributes the fire to an electrical fault in the wiring "
+        "harness; no accelerants were detected and there is no evidence of forced entry or tampering. "
+        "There are no financial-distress or motive indicators in the record, and no prior similar "
+        "claims. The allegation rests solely on the timing of a routine coverage update — "
+        "circumstantial and uncorroborated. On the evidence, misrepresentation is not substantiated "
+        "and should not, by itself, defeat coverage. Returning the floor to the Coordinator.",
+    ),
+    (
+        "coordinator", "Coordinator", "message",
+        "Investigation complete. Compiling the full record and routing it to @Sam for the binding "
+        "resolution. (Claim $9,800.00 · deductible $500.00 · payable in full $9,300.00.)",
+    ),
+    ("sam", "Sam", "resolution", MARCUS_RESOLUTION_TEXT),
 ]
 
 
-def _attach_completed_debate(claim: Claim) -> None:
+def _attach_completed_debate(
+    claim: Claim,
+    debate: list[tuple[str, str, str, str]],
+    resolution_text: str,
+    *,
+    decision: str,
+    amount: Decimal,
+    clauses: list[str],
+    room_id: str,
+) -> None:
     """Pre-populate a claim as a fully-adjudicated, officer-ratified (CLOSED) case: the ordered
     debate transcript, the SHA-256 tamper-evident hash over it, and the signed resolution. Lets a
     judge see a complete verdict instantly; the live debate path is untouched."""
@@ -219,18 +242,18 @@ def _attach_completed_debate(claim: Claim) -> None:
             content=content,
             sent_at=base + timedelta(seconds=i * 8),
         )
-        for i, (slug, name, mtype, content) in enumerate(DAVID_DEBATE)
+        for i, (slug, name, mtype, content) in enumerate(debate)
     ]
     claim.messages = messages
     blob = "\n".join(f"{m.agent_slug}:{m.content}" for m in messages)
     sha = hashlib.sha256(blob.encode("utf-8")).hexdigest()
     claim.resolution = Resolution(
-        decision="APPROVED",
-        approved_amount=Decimal("12000.00"),
-        legal_reasoning=DAVID_RESOLUTION_TEXT,
-        cited_clauses=["§7.3", "§12.1"],
+        decision=decision,
+        approved_amount=amount,
+        legal_reasoning=resolution_text,
+        cited_clauses=clauses,
         audit_trail={
-            "room_id": DAVID_ROOM_ID,
+            "room_id": room_id,
             "transcript_sha256": sha,
             "message_count": len(messages),
             "hash_algorithm": "sha256",
@@ -290,29 +313,28 @@ async def seed() -> None:
             )
             for c, emb in zip(CLAUSES, embeddings)
         ]
-        david_claim = Claim(
-            claim_number="CLM-2024-04471",
-            incident_date=date(2024, 10, 15),
-            incident_type="collision",
-            location="I-95 North, near Fort Lauderdale, FL",
-            amount_requested=Decimal("12500.00"),
-            status="approved",  # CLOSED — already adjudicated & officer-ratified (instant view)
-            band_room_id=DAVID_ROOM_ID,
-            original_denial_reason=(
-                "Claim denied per §7.3 — Mechanical Failure Exclusion. Adjuster "
-                "assessment indicates mechanical failure preceded collision event."
-            ),
-            incident_description=(
-                "Vehicle struck guardrail at approximately 35 mph. Airbags deployed. "
-                "Front-end and engine compartment sustained severe damage. Engine "
-                "seized following impact. Police report FHP-2024-10153 documents the "
-                "accident. Witness statement from Marcus T. (FHP report page 2) confirms "
-                "vehicle lost control upon guardrail contact before engine ceased operation."
-            ),
-            supporting_docs=SUPPORTING_DOCS,
-        )
-        _attach_completed_debate(david_claim)  # full transcript + signed resolution
-        david_policy.claims = [david_claim]
+        david_policy.claims = [
+            Claim(
+                claim_number="CLM-2024-04471",
+                incident_date=date(2024, 10, 15),
+                incident_type="collision",
+                location="I-95 North, near Fort Lauderdale, FL",
+                amount_requested=Decimal("12500.00"),
+                status="pending",  # OPEN — the straightforward case, run live (no SIU needed)
+                original_denial_reason=(
+                    "Claim denied per §7.3 — Mechanical Failure Exclusion. Adjuster "
+                    "assessment indicates mechanical failure preceded collision event."
+                ),
+                incident_description=(
+                    "Vehicle struck guardrail at approximately 35 mph. Airbags deployed. "
+                    "Front-end and engine compartment sustained severe damage. Engine "
+                    "seized following impact. Police report FHP-2024-10153 documents the "
+                    "accident. Witness statement from Marcus T. (FHP report page 2) confirms "
+                    "vehicle lost control upon guardrail contact before engine ceased operation."
+                ),
+                supporting_docs=SUPPORTING_DOCS,
+            )
+        ]
         session.add(david_policy)
 
         # --- Second disputed case: Lisa Park (theft denied over an alleged commercial-use
@@ -382,10 +404,83 @@ async def seed() -> None:
         ]
         session.add(lisa_policy)
 
+        # --- CLOSED showcase: Marcus Reyes (fire / staged-loss fraud) — pre-adjudicated WITH the
+        # dynamic SIU recruitment (Quinn) so a judge sees the full six-agent flow instantly. ---
+        marcus_policy = Policy(
+            policy_number="CPP-2024-6610",
+            insured_name="Marcus Reyes",
+            policy_type="Auto / Collision + Comprehensive",
+            state="FL",
+            effective_date=date(2024, 1, 1),
+            expiration_date=date(2024, 12, 31),
+            coverage_limit=Decimal("50000.00"),
+            deductible=Decimal("500.00"),
+            insurance_company="Crestview Mutual Insurance",
+            coverage_details={"collision": True, "comprehensive": True},
+        )
+        marcus_policy.clauses = [
+            PolicyClause(
+                clause_number=c["clause_number"],
+                clause_title=c["clause_title"],
+                clause_text=c["clause_text"],
+                clause_type=c["clause_type"],
+                embedding=emb,
+            )
+            for c, emb in zip(CLAUSES, embeddings)
+        ]
+        marcus_claim = Claim(
+            claim_number="CLM-2024-05120",
+            incident_date=date(2024, 8, 22),
+            incident_type="fire",
+            location="Tampa, FL",
+            amount_requested=Decimal("9800.00"),
+            status="approved",  # CLOSED — instant showcase (full 6-agent flow incl. SIU)
+            band_room_id=MARCUS_ROOM_ID,
+            original_denial_reason=(
+                "Claim denied per §7.4 — General Exclusions. Adjuster alleges a possible "
+                "staged/intentional loss (misrepresentation), citing that the claim was filed "
+                "shortly after a routine coverage update."
+            ),
+            incident_description=(
+                "The parked vehicle caught fire overnight and was a total loss. Fire marshal "
+                "report FMO-2024-0832 attributes the fire to an electrical fault in the wiring "
+                "harness, with no accelerants detected and no signs of forced entry. The insured "
+                "disputes the staged-loss allegation."
+            ),
+            supporting_docs=[
+                {
+                    "type": "fire_marshal_report",
+                    "ref": "FMO-2024-0832",
+                    "summary": (
+                        "Fire origin: electrical fault in the wiring harness. No accelerants "
+                        "detected; no signs of forced entry or tampering. Consistent with an "
+                        "accidental loss."
+                    ),
+                },
+                {
+                    "type": "photos",
+                    "ref": "CLM-2024-05120-imgs",
+                    "summary": "Scene photos showing engine-bay origin burn pattern.",
+                },
+            ],
+        )
+        _attach_completed_debate(
+            marcus_claim,
+            MARCUS_DEBATE,
+            MARCUS_RESOLUTION_TEXT,
+            decision="APPROVED",
+            amount=Decimal("9300.00"),
+            clauses=["§5.2", "§7.4"],
+            room_id=MARCUS_ROOM_ID,
+        )
+        marcus_policy.claims = [marcus_claim]
+        session.add(marcus_policy)
+
         await session.commit()
         print(
-            "  inserted: 2 policies, 12 clauses, "
-            "1 CLOSED case (David Chen, approved+signed) + 1 OPEN case (Lisa Park, pending)"
+            "  inserted: 3 policies, 18 clauses, "
+            "2 OPEN cases (David Chen, Lisa Park — pending) + "
+            "1 CLOSED showcase with SIU (Marcus Reyes, approved+signed, includes Quinn)"
         )
 
 

@@ -235,7 +235,11 @@ function ClaimsDocket({ claims, err }: { claims: Claim[] | null; err: string | n
 function JudgeBanner({ claims }: { claims: Claim[] | null }) {
   if (!claims || claims.length === 0) return null;
   const done = claims.find((c) => RESOLVED.includes(c.status));
-  const open = claims.find((c) => c.status === "pending");
+  const pendings = claims.filter((c) => c.status === "pending");
+  // Prefer a fraud/misrepresentation case for the live CTA so the run showcases the dynamic
+  // SIU recruitment (Quinn); otherwise fall back to the first open case.
+  const FRAUD = /fraud|misrepresent|undisclosed|rideshare|commercial|staged|intentional/i;
+  const open = pendings.find((c) => FRAUD.test(c.original_denial_reason ?? "")) ?? pendings[0];
   if (!done && !open) return null;
   return (
     <div className="brut mb-9 p-5" style={{ background: "var(--signal)", boxShadow: "var(--shadow-lg)" }}>
@@ -253,8 +257,9 @@ function JudgeBanner({ claims }: { claims: Claim[] | null }) {
             <div className="font-display text-lg uppercase tracking-tight">📄 See a finished verdict</div>
             <div className="mt-1 text-[13px] leading-snug text-[var(--muted)]">
               Open <b className="text-[var(--ink)]">{done.insured_name ?? done.claim_number}</b> — a
-              completed adjudication: the full agent debate, the signed resolution, and a
-              one-click tamper-evident record. <b className="text-[var(--ink)]">Instant.</b>
+              completed adjudication where a fraud allegation pulled in a 6th SIU agent: the full
+              debate, the signed resolution, and a one-click tamper-evident record.{" "}
+              <b className="text-[var(--ink)]">Instant.</b>
             </div>
           </Link>
         )}
@@ -268,7 +273,7 @@ function JudgeBanner({ claims }: { claims: Claim[] | null }) {
             <div className="mt-1 text-[13px] leading-snug text-[var(--muted)]">
               Open <b className="text-[var(--ink)]">{open.insured_name ?? open.claim_number}</b> → click{" "}
               <b className="text-[var(--ink)]">“Open Adjudication Room”</b> and watch the agents debate
-              it live through Band (~90s). A real run, not a recording.
+              it live through Band (~90s){FRAUD.test(open.original_denial_reason ?? "") ? ", including the SIU investigator pulled in for the fraud allegation" : ""}. A real run, not a recording.
             </div>
           </Link>
         )}
@@ -332,8 +337,8 @@ export default function Dashboard() {
             </h1>
             <p className="mt-4 max-w-md text-[15px] leading-relaxed">
               Four AI adjudicators debate every disputed denial through Band — one fights for the
-              insured. The conversation <span className="font-extrabold">is</span> the
-              legally-defensible audit trail.
+              insured, and an SIU investigator is recruited when fraud is alleged. The conversation{" "}
+              <span className="font-extrabold">is</span> the legally-defensible audit trail.
             </p>
             <div className="mt-6 flex flex-wrap items-center gap-3">
               <Link
@@ -371,8 +376,9 @@ export default function Dashboard() {
               })}
             </div>
             <div className="mt-4 border-t-2 border-[var(--ink)] pt-3 text-[11px] leading-snug text-[var(--muted)]">
-              Coordinator opens the case → Blake & Morgan weigh coverage → Alex challenges →
-              Sam rules → a human signs off.
+              Coordinator opens → Blake &amp; Morgan weigh coverage → Alex challenges → Sam rules →
+              a human signs off. <span className="text-[var(--ink)]">Quinn (SIU) is pulled in only
+              when fraud is alleged.</span>
             </div>
           </div>
         </section>

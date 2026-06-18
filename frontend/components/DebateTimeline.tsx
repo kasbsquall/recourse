@@ -7,7 +7,7 @@ import type { ClaimStatus, Message } from "@/lib/types";
 
 type Stage = { slug: string; label: string; node: string };
 
-const STAGES: Stage[] = [
+const BASE_STAGES: Stage[] = [
   { slug: "coordinator", label: "Intake", node: "C" },
   { slug: "blake", label: "Evaluate", node: "B" },
   { slug: "morgan", label: "Policy", node: "M" },
@@ -15,6 +15,9 @@ const STAGES: Stage[] = [
   { slug: "sam", label: "Rule", node: "S" },
   { slug: "verdict", label: "Verdict", node: "⚖" },
 ];
+// Quinn (SIU) is recruited dynamically; its stage only appears once it has actually joined the
+// debate, slotted between Challenge (Alex) and Rule (Sam).
+const SIU_STAGE: Stage = { slug: "quinn", label: "Investigate", node: "◉" };
 
 const TERMINAL = ["approved", "denied", "partial"];
 
@@ -39,14 +42,12 @@ export default function DebateTimeline({
 }) {
   const has = (slug: string) => messages.some((m) => m.agent_slug === slug);
   const terminal = TERMINAL.includes(status);
-  const done: Record<string, boolean> = {
-    coordinator: has("coordinator"),
-    blake: has("blake"),
-    morgan: has("morgan"),
-    alex: has("alex"),
-    sam: has("sam"),
-    verdict: terminal,
-  };
+  // Insert the SIU stage only once Quinn has actually joined this debate (dynamic recruitment).
+  const STAGES: Stage[] = has("quinn")
+    ? [...BASE_STAGES.slice(0, 4), SIU_STAGE, ...BASE_STAGES.slice(4)]
+    : BASE_STAGES;
+  const done: Record<string, boolean> = {};
+  for (const s of STAGES) done[s.slug] = s.slug === "verdict" ? terminal : has(s.slug);
   const activeIdx = status === "in_review" ? STAGES.findIndex((s) => !done[s.slug]) : -1;
 
   return (
