@@ -6,6 +6,12 @@
 
 **Band of Agents Hackathon · lablab.ai · Track 3: Regulated & High-Stakes**
 
+![Live](https://img.shields.io/badge/demo-live-15803d?style=flat-square)
+![Hackathon](https://img.shields.io/badge/Band%20of%20Agents-Track%203-0e7490?style=flat-square)
+![Agents](https://img.shields.io/badge/agents-6%20·%20dynamic%20recruitment-b45309?style=flat-square)
+![Stack](https://img.shields.io/badge/Band%20·%20Next.js%20·%20FastAPI%20·%20pgvector-2d5bff?style=flat-square)
+![License](https://img.shields.io/badge/license-MIT-555?style=flat-square)
+
 🔗 **Live app:** [recourseband.duckdns.org](https://recourseband.duckdns.org)
 🎬 **Commercial:** [youtu.be/io2CgqYpSek](https://youtu.be/io2CgqYpSek) · 🖥️ **Live walkthrough:** [youtu.be/kY6AXSlKqhk](https://youtu.be/kY6AXSlKqhk) · 📑 **Pitch deck:** [`deck/deck_v4.pdf`](deck/deck_v4.pdf)
 
@@ -14,8 +20,8 @@
 ## What it does
 
 Crestview Mutual (a fictional insurer) denied a claim. Instead of one overworked
-reviewer deciding the appeal alone, **Recourse convenes five specialist agents in a
-single Band room** and lets them argue it out:
+reviewer deciding the appeal alone, **Recourse convenes a panel of specialist agents in a
+single Band room** — five standing, plus a sixth investigator on call — and lets them argue it out:
 
 | Agent | Role | Job |
 |-------|------|-----|
@@ -34,18 +40,30 @@ The entire conversation is persisted, ordered, and **SHA-256 hashed** — tamper
 on the record. A human claims officer then **approves or overrides** the resolution, and
 the closed case is downloadable as a **signed Adjudication Record**.
 
+## See it in action
+
+| | |
+|:---|:---|
+| ![Dynamic recruitment](docs/shot-recruit.png)<br>**Dynamic recruitment** — the Coordinator pulls Quinn (SIU) into the live room, mid-debate, only when fraud is alleged | ![Signed verdict](docs/shot-verdict.png)<br>**Signed verdict** — APPROVED with cited clauses, the SIU finding, and the human officer's sign-off |
+| ![Signed record](docs/shot-record.png)<br>**Signed record** — a printable, regulator-filable Adjudication Record | ![JSON export](docs/shot-json.png)<br>**JSON export** — the full transcript + SHA-256 hash, machine-verifiable |
+
+Each case also carries **clickable evidence** (police / fire-marshal reports, scene photos) the
+panel reasons over — so nothing is invented.
+
+## The demo — three cases
+
+Recruitment is *discriminating*: a clean dispute runs five agents; a fraud allegation pulls in the
+sixth. Two cases are seeded **pending** so anyone can run a full debate end-to-end.
+
+| Case | Claim | What happens |
+|------|-------|--------------|
+| **David Chen** | $12,000 collision, denied | *pending · run it live* — **5 agents**, no fraud → Quinn not recruited |
+| **Lisa Park** | $4,200 theft, denied as undisclosed commercial use | *pending · run it live* — **6 agents**, fraud alleged → **Quinn recruited live** |
+| **Marcus Reyes** | $9,300 fire, denied as a staged loss | *closed showcase* — pre-adjudicated, full 6-agent transcript, officer-signed |
+
 ## Architecture
 
-```
-Browser ──► Next.js 14 (App Router)         ── SSE live stream ──►  FastAPI orchestrator
-                                                                          │
-                          ┌───────────────────────────────────────────────┼───────────────┐
-                          ▼                          ▼                      ▼
-                 PostgreSQL + pgvector       Band — 5 agents        Model providers
-                 claims · transcript ·       + Quinn (recruited     • AI/ML API — GPT-4o (Blake, Morgan, Sam, Quinn)
-                 clause embeddings (RAG)      on demand) ·          • Featherless — Hermes-2-Pro (Alex, GPT-4o failover)
-                                              @mention routing
-```
+![Architecture — one Band room, a streaming spine, a durable record](docs/architecture.png)
 
 - **Frontend** — Next.js 14, TypeScript, Tailwind; neo-brutalist "Verdict" design.
 - **Backend** — FastAPI, async SQLAlchemy, SSE; a Coordinator-driven turn engine.
