@@ -149,8 +149,8 @@ MARCUS_RESOLUTION_TEXT = (
     "resting on suspicion rather than evidence (~60% confidence pending SIU review).\n"
     "- Morgan: Confirmed §5.2 covers fire and that §7.4 excludes only proven intentional damage.\n"
     "- Alex: Argued the denial inverted the burden of proof onto the insured.\n"
-    "- Quinn (SIU): Found the staged-loss allegation UNSUPPORTED — electrical origin, no "
-    "accelerants, no motive — so it cannot defeat coverage.\n\n"
+    "- Quinn: Investigated the misrepresentation allegation and found it unsubstantiated — "
+    "electrical origin, no accelerants, no motive — so it cannot defeat coverage.\n\n"
     "CONFIDENCE: HIGH\n"
     "RECOMMENDATION TO CLAIMS OFFICER: Approve the claim for $9,300.00 — a covered fire loss with "
     "no substantiated evidence of misrepresentation."
@@ -203,18 +203,19 @@ MARCUS_DEBATE: list[tuple[str, str, str, str]] = [
     ),
     (
         "quinn", "Quinn", "message",
-        "SIU finding: UNSUPPORTED. I reviewed the file against the staged-loss allegation. The fire "
-        "marshal report FMO-2024-0832 attributes the fire to an electrical fault in the wiring "
-        "harness; no accelerants were detected and there is no evidence of forced entry or tampering. "
-        "There are no financial-distress or motive indicators in the record, and no prior similar "
-        "claims. The allegation rests solely on the timing of a routine coverage update — "
-        "circumstantial and uncorroborated. On the evidence, misrepresentation is not substantiated "
-        "and should not, by itself, defeat coverage. Returning the floor to the Coordinator.",
+        "I examined the staged-loss allegation against what is actually in the file, and it does not "
+        "hold up. The fire marshal report FMO-2024-0832 attributes the fire to an electrical fault "
+        "in the wiring harness — no accelerants, no forced entry, no signs of tampering. There are "
+        "no motive or financial-distress indicators on record, and no prior similar claims. The "
+        "allegation rests entirely on the timing of a routine coverage update, which is "
+        "circumstantial, not evidence. Because §7.4 requires proven intent and there is none, it "
+        "cannot apply — the fire remains a covered loss under §5.2. Returning the floor to the "
+        "Coordinator.",
     ),
     (
         "coordinator", "Coordinator", "message",
         "Investigation complete. Compiling the full record and routing it to @Sam for the binding "
-        "resolution. (Claim $9,800.00 · deductible $500.00 · payable in full $9,300.00.)",
+        "resolution. (Claim $9,800.00 · deductible $500.00 · payable in full **$9,300.00**.)",
     ),
     ("sam", "Sam", "resolution", MARCUS_RESOLUTION_TEXT),
 ]

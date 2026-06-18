@@ -367,12 +367,13 @@ async def _generate_quinn_failover(context: list[tuple[str, str]]) -> str:
     from langchain_core.messages import HumanMessage, SystemMessage
 
     system = (
-        "You are Quinn, a Special Investigations Unit (SIU) examiner on an insurance adjudication "
+        "You are Quinn, the Special Investigations Unit examiner on an insurance adjudication "
         "panel. A fraud or misrepresentation allegation is in play. Examine ONLY the evidence "
-        "already in the debate. State whether the allegation is SUBSTANTIATED, PARTIALLY "
-        "SUPPORTED, or UNSUPPORTED, and name the specific evidence present or absent. If it is "
-        "unsupported, say plainly that it should not by itself defeat coverage. Start with "
-        "'SIU finding:'. Under 160 words, plain prose."
+        "already in the debate and decide whether it holds up. Name the specific documents and "
+        "findings that support or undercut it (origin/cause, accelerants, forced entry, motive, "
+        "prior claims, timing), and reference the relevant clause numbers as the panel does. If "
+        "the allegation is not backed by evidence, say plainly that it cannot by itself defeat "
+        "coverage. Plain, natural prose — no labels or status keywords. Under 160 words."
     )
     thread = "\n\n".join(f"[{who}]:\n{text}" for who, text in context)
     try:
@@ -387,10 +388,9 @@ async def _generate_quinn_failover(context: list[tuple[str, str]]) -> str:
     except Exception:
         logger.warning("Quinn failover (aimlapi) also failed; using a neutral placeholder")
     return (
-        "SIU finding: UNSUPPORTED. The allegation of misrepresentation is not corroborated by "
-        "anything in the file — no trip logs, commercial markings, or documentation are offered "
-        "to substantiate it. On the available evidence the allegation rests on assertion alone "
-        "and should not, by itself, defeat coverage."
+        "The misrepresentation allegation is not corroborated by anything in the file — no "
+        "documentation, records, or physical findings are offered to substantiate it. On the "
+        "available evidence it rests on assertion alone and cannot, by itself, defeat coverage."
     )
 
 
@@ -444,7 +444,7 @@ async def _run_sam_turn(
     display = (
         f"Debate complete. Compiling the full record and routing it to @Sam for the binding "
         f"resolution. (Claim ${amount:,.2f} · deductible ${deductible:,.2f} · "
-        f"payable in full ${payable:,.2f}.)"
+        f"payable in full **${payable:,.2f}**.)"
     )
     cid = await room.post_message(room_id, routed_to_sam, "sam")
     seen.add(cid)

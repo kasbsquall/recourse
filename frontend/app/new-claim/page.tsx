@@ -71,8 +71,9 @@ export default function NewClaim() {
           File a Disputed Claim
         </h1>
         <p className="mb-6 max-w-lg text-sm text-[var(--muted)]">
-          Submit a denied claim to convene the five-agent adjudication panel. The debate becomes
-          the legally-defensible record.
+          Submit a denied claim to convene the adjudication panel — the agents debate it through
+          Band, and a fraud investigator is called in when misrepresentation is alleged. The debate
+          becomes the legally-defensible record.
         </p>
 
         {err && (
@@ -247,6 +248,17 @@ export default function NewClaim() {
                   );
                 })}
               </ol>
+              <div className="flex items-center gap-3 border-t-2 border-[var(--ink)] px-4 py-2.5">
+                <AgentAvatar slug="quinn" size={34} />
+                <div className="min-w-0">
+                  <div className="font-display text-sm uppercase leading-none tracking-tight">
+                    Quinn
+                  </div>
+                  <div className="text-[11px] leading-snug text-[var(--muted)]">
+                    Special Investigations Unit — only if fraud is alleged
+                  </div>
+                </div>
+              </div>
             </div>
             <div
               className="p-4 text-[12px] leading-relaxed text-[var(--muted)]"
