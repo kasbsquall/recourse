@@ -7,7 +7,7 @@
 **Band of Agents Hackathon · lablab.ai · Track 3: Regulated & High-Stakes**
 
 🔗 **Live app:** [recourseband.duckdns.org](https://recourseband.duckdns.org)
-🎬 **Commercial:** [youtu.be/HhmUWdQ2ZSs](https://youtu.be/HhmUWdQ2ZSs) · 🖥️ **Live walkthrough:** [youtu.be/2hd0-p9l4DE](https://youtu.be/2hd0-p9l4DE) · 📑 **Pitch deck:** [`deck/deck_v4.pdf`](deck/deck_v4.pdf)
+🎬 **Commercial:** [youtu.be/io2CgqYpSek](https://youtu.be/io2CgqYpSek) · 🖥️ **Live walkthrough:** [youtu.be/kY6AXSlKqhk](https://youtu.be/kY6AXSlKqhk) · 📑 **Pitch deck:** [`deck/deck_v4.pdf`](deck/deck_v4.pdf)
 
 ![Recourse dashboard](docs/dashboard.png)
 
