@@ -25,13 +25,6 @@ const money = (v: string) =>
 
 const ADJUDICATOR_SLUGS = ["blake", "morgan", "alex", "sam"];
 
-const CRASH_PHOTOS: LightboxPhoto[] = [
-  { src: "/docs/crash-1.jpg", caption: "Front-end crush — driver side quarter" },
-  { src: "/docs/crash-2.jpg", caption: "Engine compartment — impact damage to oil pan" },
-  { src: "/docs/crash-3.jpg", caption: "Guardrail contact point — I-95 MM26" },
-  { src: "/docs/crash-4.jpg", caption: "Deployed airbags — cabin" },
-];
-
 export default function ClaimRoom() {
   const { id } = useParams<{ id: string }>();
   const [claim, setClaim] = useState<ClaimDetail | null>(null);
@@ -40,7 +33,9 @@ export default function ClaimRoom() {
   const [resolution, setResolution] = useState<Resolution | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [activeDoc, setActiveDoc] = useState<SupportingDoc | null>(null);
-  const [photoIndex, setPhotoIndex] = useState<number | null>(null);
+  const [lightbox, setLightbox] = useState<{ photos: LightboxPhoto[]; index: number } | null>(
+    null,
+  );
   const unsubRef = useRef<(() => void) | null>(null);
 
   const turnsPosted = new Set(
@@ -65,7 +60,7 @@ export default function ClaimRoom() {
   );
 
   const closeDoc = useCallback(() => setActiveDoc(null), []);
-  const closePhoto = useCallback(() => setPhotoIndex(null), []);
+  const closePhoto = useCallback(() => setLightbox(null), []);
 
   const scrollToAgent = useCallback((slug: string) => {
     // The seek targets carry `scroll-mt-[120px]`, so this lands the message cleanly below the
@@ -197,20 +192,25 @@ export default function ClaimRoom() {
                         >
                           {inner}
                         </button>
-                        {d.type === "photos" && (
-                          <div className="mt-2 grid grid-cols-4 gap-1.5">
-                            {[1, 2, 3, 4].map((n) => (
+                        {d.type === "photos" && d.images && d.images.length > 0 && (
+                          <div
+                            className="mt-2 grid gap-1.5"
+                            style={{
+                              gridTemplateColumns: `repeat(${d.images.length}, minmax(0, 1fr))`,
+                            }}
+                          >
+                            {d.images.map((img, i) => (
                               <button
-                                key={n}
-                                onClick={() => setPhotoIndex(n - 1)}
+                                key={img.src}
+                                onClick={() => setLightbox({ photos: d.images!, index: i })}
                                 className="brut-hover overflow-hidden"
                                 style={{ border: "2px solid var(--ink)", aspectRatio: "4 / 3" }}
-                                title={CRASH_PHOTOS[n - 1]?.caption}
+                                title={img.caption}
                               >
                                 {/* eslint-disable-next-line @next/next/no-img-element */}
                                 <img
-                                  src={`/docs/crash-${n}.jpg`}
-                                  alt={`Crash photo ${n}`}
+                                  src={img.src}
+                                  alt={img.caption}
                                   loading="lazy"
                                   className="h-full w-full object-cover"
                                 />
@@ -332,9 +332,9 @@ export default function ClaimRoom() {
 
       <DocModal doc={activeDoc} onClose={closeDoc} />
       <PhotoLightbox
-        key={photoIndex}
-        photos={CRASH_PHOTOS}
-        startIndex={photoIndex}
+        key={lightbox ? `${lightbox.photos[0]?.src}-${lightbox.index}` : "closed"}
+        photos={lightbox?.photos ?? []}
+        startIndex={lightbox ? lightbox.index : null}
         onClose={closePhoto}
       />
     </main>

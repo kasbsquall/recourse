@@ -73,7 +73,7 @@ export default function PhotoLightbox({
       >
         <div className="flex items-center justify-between border-b-[2.5px] border-[var(--ink)] bg-[var(--ink)] px-4 py-2">
           <span id="lightbox-title" className="uppercase-mono text-[11px] font-bold text-[var(--bg)]">
-            Crash photo {i + 1} / {photos.length}
+            Evidence photo {i + 1} / {photos.length}
           </span>
           <button
             onClick={onClose}

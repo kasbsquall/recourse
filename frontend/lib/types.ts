@@ -63,4 +63,5 @@ export interface SupportingDoc {
   ref: string;
   summary: string;
   url?: string;
+  images?: { src: string; caption: string }[];
 }

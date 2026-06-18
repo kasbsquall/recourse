@@ -119,6 +119,12 @@ SUPPORTING_DOCS = [
         "type": "photos",
         "ref": "CLM-2024-04471-imgs",
         "url": "/docs/CLM-2024-04471-photos.html",
+        "images": [
+            {"src": "/docs/crash-1.jpg", "caption": "Front-end crush — driver side quarter"},
+            {"src": "/docs/crash-2.jpg", "caption": "Engine compartment — impact damage to oil pan"},
+            {"src": "/docs/crash-3.jpg", "caption": "Guardrail contact point — I-95 MM26"},
+            {"src": "/docs/crash-4.jpg", "caption": "Deployed airbags — cabin"},
+        ],
         "summary": (
             "4 photos showing front-end crushing consistent with 35mph guardrail impact."
         ),
@@ -406,6 +412,11 @@ async def seed() -> None:
                         "type": "photos",
                         "ref": "CLM-2024-03988-imgs",
                         "url": "/docs/CLM-2024-03988-photos.html",
+                        "images": [
+                            {"src": "/docs/theft-1.jpg", "caption": "Dashboard — stereo head unit removed, harness exposed"},
+                            {"src": "/docs/theft-2.jpg", "caption": "Exhaust — catalytic converter cut out (fresh saw marks)"},
+                            {"src": "/docs/theft-3.jpg", "caption": "Vehicle at residence — ordinary personal car, no rideshare livery"},
+                        ],
                         "summary": (
                             "3 photos: stereo removed from dash, catalytic converter cut from the "
                             "exhaust, pried passenger window — no rideshare livery on the vehicle."
@@ -474,6 +485,11 @@ async def seed() -> None:
                     "type": "photos",
                     "ref": "CLM-2024-05120-imgs",
                     "url": "/docs/CLM-2024-05120-photos.html",
+                    "images": [
+                        {"src": "/docs/fire-1.jpg", "caption": "Total-loss vehicle — overnight fire, parked at residence"},
+                        {"src": "/docs/fire-2.jpg", "caption": "Engine bay — origin at driver-side wiring harness (electrical)"},
+                        {"src": "/docs/fire-3.jpg", "caption": "Cabin / dash burn — no pour patterns or accelerant trails"},
+                    ],
                     "summary": "Scene photos showing engine-bay origin burn pattern.",
                 },
             ],
