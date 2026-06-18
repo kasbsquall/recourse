@@ -308,11 +308,13 @@ _QUINN_INSTRUCTION = (
 )
 
 
-def _alleges_fraud(claim: Claim, context: list[tuple[str, str]]) -> bool:
-    """True when a fraud/misrepresentation allegation is in play — the trigger to recruit SIU."""
+def _alleges_fraud(claim: Claim) -> bool:
+    """True when the ORIGINAL DENIAL alleges fraud / misrepresentation — the trigger to recruit
+    SIU. Anchored to the denial reason (+ incident description), NOT the live debate, so an agent
+    merely quoting an exclusion's text (e.g. §7.4's 'commercial purposes') can't spuriously trip
+    it on a non-fraud case."""
     blob = " ".join(
         [claim.original_denial_reason or "", claim.incident_description or ""]
-        + [text for _, text in context]
     ).lower()
     return any(t in blob for t in _FRAUD_TRIGGERS)
 
@@ -325,7 +327,7 @@ async def _maybe_run_quinn_turn(
     configured AND an allegation of fraud/misrepresentation is actually in play. Otherwise the
     standing 5-agent debate is unchanged. Quinn's finding is appended to the context Sam rules on.
     """
-    if not settings.quinn_enabled or not _alleges_fraud(claim, context):
+    if not settings.quinn_enabled or not _alleges_fraud(claim):
         return
     try:
         await room.recruit_quinn(room_id)  # Band add_participant — dynamic agent discovery

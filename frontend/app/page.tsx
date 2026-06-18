@@ -145,7 +145,7 @@ function ClaimsDocket({ claims, err }: { claims: Claim[] | null; err: string | n
           className="uppercase-mono px-4 py-3 text-[12px] font-bold"
           style={{ background: "#dc2626", color: "#fff", border: "2.5px solid var(--ink)" }}
         >
-          Backend unreachable — start the API on :8000. ({err})
+          Backend unreachable — the API isn’t responding. ({err})
         </div>
       )}
 
@@ -336,9 +336,10 @@ export default function Dashboard() {
               Adjudication
             </h1>
             <p className="mt-4 max-w-md text-[15px] leading-relaxed">
-              Four AI adjudicators debate every disputed denial through Band — one fights for the
-              insured, and an SIU investigator is recruited when fraud is alleged. The conversation{" "}
-              <span className="font-extrabold">is</span> the legally-defensible audit trail.
+              A panel of AI adjudicators debates every disputed denial through Band — one fights for
+              the insured, and an SIU investigator is recruited when fraud is alleged. The
+              conversation <span className="font-extrabold">is</span> the legally-defensible audit
+              trail.
             </p>
             <div className="mt-6 flex flex-wrap items-center gap-3">
               <Link

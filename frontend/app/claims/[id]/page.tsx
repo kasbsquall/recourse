@@ -240,9 +240,11 @@ export default function ClaimRoom() {
                 <span className="uppercase-mono flex items-center gap-2 text-[11px] font-bold text-[#2d5bff]">
                   <span className="flash flex items-center gap-2">
                     <span className="h-2.5 w-2.5 bg-[#2d5bff]" />
-                    In progress
+                    Live · debating
                   </span>
-                  <span className="text-[var(--muted)]">· Turn {Math.min(turnsPosted + 1, 4)}/4</span>
+                  {turnsPosted > 0 && (
+                    <span className="text-[var(--muted)]">· {turnsPosted} turns in</span>
+                  )}
                 </span>
               )}
               {["approved", "denied", "partial"].includes(status) &&

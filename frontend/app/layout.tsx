@@ -19,7 +19,7 @@ const spaceMono = Space_Mono({
 export const metadata: Metadata = {
   title: "RECOURSE — Adversarial Claims Adjudication",
   description:
-    "Four AI agents debate your insurance claim denial and generate a legally-defensible resolution. The conversation IS the audit trail.",
+    "A panel of AI agents debates your insurance claim denial and generates a legally-defensible resolution. The conversation IS the audit trail.",
 };
 
 export default function RootLayout({

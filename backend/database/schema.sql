@@ -61,7 +61,9 @@ CREATE TABLE IF NOT EXISTS agent_messages (
 
 CREATE TABLE IF NOT EXISTS resolutions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    claim_id UUID REFERENCES claims(id) ON DELETE CASCADE,
+    -- One resolution per claim: a UNIQUE guard turns a concurrent-adjudicate double-write into a
+    -- clean failure instead of two rows (which would break the uselist=False relationship load).
+    claim_id UUID UNIQUE REFERENCES claims(id) ON DELETE CASCADE,
     decision VARCHAR(30) NOT NULL,
     approved_amount DECIMAL(12,2),
     legal_reasoning TEXT NOT NULL,
@@ -71,3 +73,7 @@ CREATE TABLE IF NOT EXISTS resolutions (
     approved_at TIMESTAMP WITH TIME ZONE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
+
+-- One resolution per claim. Idempotent + applies even when the CREATE TABLE above is skipped on
+-- an existing DB, so a concurrent re-adjudicate fails cleanly instead of writing duplicate rows.
+CREATE UNIQUE INDEX IF NOT EXISTS resolutions_claim_id_key ON resolutions (claim_id);

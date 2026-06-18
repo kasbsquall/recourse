@@ -134,7 +134,7 @@ class Resolution(Base):
         UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
     )
     claim_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("claims.id", ondelete="CASCADE")
+        ForeignKey("claims.id", ondelete="CASCADE"), unique=True
     )
     decision: Mapped[str] = mapped_column(String(30))
     approved_amount: Mapped[Decimal | None] = mapped_column(DECIMAL(12, 2))

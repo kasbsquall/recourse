@@ -75,6 +75,12 @@ export default function ResolutionPanel({
   }
 
   async function printRecord() {
+    // Open the window synchronously on the click so pop-up blockers don't silently suppress it.
+    const w = window.open("", "_blank");
+    if (!w) {
+      setErr("Allow pop-ups for this site to download the signed record.");
+      return;
+    }
     try {
       const a = await (await fetch(auditUrl(claimId))).json();
       const rows = (a.transcript ?? [])
@@ -95,9 +101,7 @@ export default function ResolutionPanel({
         : r.approved_by
           ? `Reviewed, approved &amp; <b>signed</b> by ${esc(r.approved_by)}${r.approved_at ? " · " + esc(r.approved_at) : ""}`
           : "Pending human officer sign-off";
-      const w = window.open("", "_blank");
-      if (!w) return;
-      w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>Adjudication Record — ${a.claim_number}</title>
+      w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>Adjudication Record — ${esc(a.claim_number)}</title>
 <style>
   body{font-family:Georgia,serif;color:#0e0e0e;max-width:760px;margin:36px auto;padding:0 24px;line-height:1.5}
   .brand{font-family:'Arial Black',Arial,sans-serif;font-weight:900;letter-spacing:-.03em;font-size:13px}
@@ -126,7 +130,7 @@ export default function ResolutionPanel({
     <b>Incident</b> ${esc(a.incident_type ?? "—")} on ${esc(a.incident_date ?? "—")}${a.location ? " · " + esc(a.location) : ""}<br>
     <b>Status</b> ${esc(a.status)}
   </div>
-  <div class="verdict">${r.decision ?? "—"}${r.approved_amount != null ? " · " + fmt(r.approved_amount) : ""}</div>
+  <div class="verdict">${esc(r.decision ?? "—")}${r.approved_amount != null ? " · " + fmt(r.approved_amount) : ""}</div>
   <div class="math">Amount requested ${fmt(a.amount_requested)} − Deductible ${fmt(a.deductible)} = <b>Payable if covered ${fmt(a.payable_if_covered)}</b></div>
   <h2>Legal reasoning</h2>
   <p>${esc(r.legal_reasoning).replace(/\n/g, "<br>")}</p>
@@ -144,6 +148,7 @@ export default function ResolutionPanel({
       w.focus();
       setTimeout(() => w.print(), 400);
     } catch {
+      w.close();
       setErr("Couldn't build the record — check the backend.");
     }
   }
