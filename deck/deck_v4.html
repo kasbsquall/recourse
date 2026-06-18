@@ -94,6 +94,21 @@
     box-shadow:var(--shadow-sm);padding:11px 14px;font-weight:800;font-size:14px;line-height:1.15}
   .box .s{font-family:var(--mono);font-weight:400;font-size:11px;color:var(--muted);display:block;margin-top:3px}
   .conn{flex:0 0 auto;font-family:var(--mono);font-size:11px;color:var(--muted);font-weight:700;white-space:nowrap}
+  /* layered architecture (v4) */
+  .archv{display:flex;flex-direction:column;gap:7px;margin-top:18px}
+  .tier{background:var(--paper);border:2.5px solid var(--ink);border-left:11px solid var(--c);
+    box-shadow:var(--shadow-sm);padding:11px 18px;display:flex;align-items:center;gap:18px}
+  .tier .tlab{font-family:var(--mono);font-weight:700;font-size:10.5px;letter-spacing:.13em;
+    text-transform:uppercase;color:var(--c);flex:0 0 118px}
+  .tier .tmain{flex:1}
+  .tier .tmain b{font-size:16.5px;font-weight:900;display:block;line-height:1.1}
+  .tier .tmain .desc{font-family:var(--mono);font-size:11.5px;color:var(--muted);display:block;margin-top:3px;line-height:1.3}
+  .flowc{display:flex;justify-content:center;height:13px;align-items:center}
+  .flowc span{font-family:var(--mono);font-size:10.5px;color:var(--muted);font-weight:700;
+    letter-spacing:.05em;background:var(--bg);padding:0 12px;text-transform:uppercase}
+  .dots{display:flex;flex-wrap:wrap;gap:6px;margin-top:7px}
+  .dot{font-family:var(--mono);font-size:11px;font-weight:700;color:#fff;padding:3px 10px;letter-spacing:.02em}
+  .dot.dim{background:transparent;color:var(--quinn);border:2px solid var(--quinn)}
   /* quote / transcript excerpt */
   .quote{border:2.5px solid var(--ink);box-shadow:var(--shadow);background:var(--paper)}
   .quote .hd{background:var(--coord);color:#fff;font-family:var(--mono);font-weight:700;
@@ -328,28 +343,51 @@
 <!-- 10 · ARCHITECTURE -->
 <section class="slide">
   <div class="eyebrow">Architecture</div>
-  <h1 style="font-size:44px;margin-top:13px">One room. A streaming spine. A durable record.</h1>
-  <div class="arch">
-    <div class="lane">
-      <div class="box" style="min-width:190px">Next.js 14 — App Router<span class="s">Dashboard · live debate room · resolution</span></div>
-      <span class="conn">— SSE live stream →</span>
-      <div class="box" style="min-width:190px">FastAPI — Orchestrator<span class="s">Coordinator-driven turn engine</span></div>
-      <span class="conn">↕</span>
-      <div class="box grow">PostgreSQL + pgvector<span class="s">Claims, transcript, clause embeddings (RAG)</span></div>
+  <h1 style="font-size:40px;margin-top:10px">One room. A streaming spine. A durable record.</h1>
+  <div class="archv">
+    <div class="tier" style="--c:var(--blake)">
+      <span class="tlab">Client</span>
+      <div class="tmain"><b>Next.js 14 · App Router</b>
+        <span class="desc">Dashboard · live debate room · resolution panel · signed-record / JSON export</span></div>
     </div>
-    <div class="lane">
-      <div class="box" style="background:var(--paper2)">Band — 5 standing agents + Quinn<span class="s">Coordinator · Blake · Morgan · Alex · Sam · Quinn recruited via add_participant</span></div>
-      <span class="conn">model providers →</span>
-      <div class="box">AI/ML API — GPT-4o<span class="s">Blake · Morgan · Sam · Quinn</span></div>
-      <div class="box">Featherless<span class="s">Hermes-2-Pro (Alex)</span></div>
+    <div class="flowc"><span>↑ SSE live stream (un-buffered) &nbsp;·&nbsp; ↓ user actions</span></div>
+    <div class="tier" style="--c:var(--coord)">
+      <span class="tlab">Orchestration</span>
+      <div class="tmain"><b>FastAPI · Coordinator-driven turn engine</b>
+        <span class="desc">async SQLAlchemy · streams each turn over SSE · drives every handoff</span></div>
+    </div>
+    <div class="flowc"><span>Band Agent API &nbsp;·&nbsp; @mention routing &nbsp;·&nbsp; add_participant</span></div>
+    <div class="tier" style="--c:var(--quinn)">
+      <span class="tlab">Band room</span>
+      <div class="tmain"><b>One Band room — agents assembled per case</b>
+        <div class="dots">
+          <span class="dot" style="background:var(--coord)">Coordinator</span>
+          <span class="dot" style="background:var(--blake)">Blake</span>
+          <span class="dot" style="background:var(--morgan)">Morgan</span>
+          <span class="dot" style="background:var(--alex)">Alex</span>
+          <span class="dot" style="background:var(--sam)">Sam</span>
+          <span class="dot dim">◉ Quinn · recruited on demand</span>
+        </div>
+      </div>
+    </div>
+    <div class="row" style="gap:7px;margin-top:0">
+      <div class="tier grow" style="--c:var(--morgan)">
+        <span class="tlab">Data · RAG</span>
+        <div class="tmain"><b>PostgreSQL + pgvector</b>
+          <span class="desc">claims · transcript · clause embeddings — MiniLM 384-dim, cosine</span></div>
+      </div>
+      <div class="tier grow" style="--c:var(--sam)">
+        <span class="tlab">Models</span>
+        <div class="tmain"><b>AI/ML GPT-4o · Featherless Hermes-2-Pro</b>
+          <span class="desc">GPT-4o: Blake · Morgan · Sam · Quinn &nbsp;|&nbsp; Hermes-2-Pro: Alex</span></div>
+      </div>
     </div>
   </div>
-  <div class="row" style="margin-top:22px;flex-wrap:wrap;gap:11px">
-    <span class="chip">Dynamic recruitment via add_participant</span>
+  <div class="row" style="margin-top:16px;flex-wrap:wrap;gap:10px">
     <span class="chip">Docker Compose on VPS</span>
-    <span class="chip">OpenLiteSpeed reverse proxy · Let's Encrypt TLS</span>
-    <span class="chip">SSE un-buffered</span>
-    <span class="chip">all-MiniLM-L6-v2 · 384-dim cosine</span>
+    <span class="chip">OpenLiteSpeed · Let's Encrypt TLS</span>
+    <span class="chip">SSE un-buffered (respBuffer 0)</span>
+    <span class="chip">Live · recourseband.duckdns.org</span>
   </div>
   <div class="footer"><span>Recourse — Adversarial Claims Adjudication</span><span>10 / 14</span></div>
 </section>
