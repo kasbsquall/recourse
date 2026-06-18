@@ -12,10 +12,14 @@
 ![Stack](https://img.shields.io/badge/Band%20·%20Next.js%20·%20FastAPI%20·%20pgvector-2d5bff?style=flat-square)
 ![License](https://img.shields.io/badge/license-MIT-555?style=flat-square)
 
-🔗 **Live app:** [recourseband.duckdns.org](https://recourseband.duckdns.org)
-🎬 **Commercial:** [youtu.be/io2CgqYpSek](https://youtu.be/io2CgqYpSek) · 🖥️ **Live walkthrough:** [youtu.be/kY6AXSlKqhk](https://youtu.be/kY6AXSlKqhk) · 📑 **Pitch deck:** [`deck/deck_v4.pdf`](deck/deck_v4.pdf)
+- 🔗 **Live app** — [recourseband.duckdns.org](https://recourseband.duckdns.org)
+- 🎬 **Commercial** — [youtu.be/io2CgqYpSek](https://youtu.be/io2CgqYpSek)
+- 🖥️ **Live walkthrough** — [youtu.be/kY6AXSlKqhk](https://youtu.be/kY6AXSlKqhk)
+- 📑 **Pitch deck** — [`deck/deck_v4.pdf`](deck/deck_v4.pdf)
 
-![Recourse dashboard](docs/dashboard.png)
+![Recourse — live adversarial adjudication: agents debate, the Coordinator recruits Quinn (SIU), and a signed verdict lands](docs/hero.gif)
+
+> _The live adjudication room: five agents debate, the Coordinator recruits Quinn (SIU) when fraud is alleged, and a signed verdict lands — a real run on the production app._
 
 ## What it does
 
