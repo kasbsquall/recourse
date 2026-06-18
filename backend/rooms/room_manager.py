@@ -51,6 +51,12 @@ class RoomManager:
             )
             for slug, cfg in {**settings.band_agents, "coordinator": orchestrator}.items()
         }
+        # Quinn (SIU) is recruited dynamically; add its reader so its reply is unioned into the
+        # transcript. Only when configured (feature-flagged).
+        if settings.quinn_enabled:
+            self._readers["quinn"] = AsyncRestClient(
+                base_url=settings.band_rest_url, api_key=settings.quinn["api_key"]
+            )
 
     async def create_room(self, task_id: str | None = None) -> str:
         resp = await self.client.agent_api_chats.create_agent_chat(
@@ -75,9 +81,29 @@ class RoomManager:
             added.append(slug)
         return added
 
+    async def recruit_quinn(self, room_id: str) -> None:
+        """Dynamically add the SIU investigator (Quinn) to an in-flight room (add_participant).
+
+        This is Band dynamic agent discovery: a specialist is pulled into the live debate only
+        when the case warrants it (a fraud/misrepresentation allegation), rather than every case
+        carrying the standing panel. Idempotent (409 = already present)."""
+        q = settings.quinn
+        try:
+            await self.client.agent_api_participants.add_agent_chat_participant(
+                room_id,
+                participant=ParticipantRequest(participant_id=q["agent_id"], role="member"),
+            )
+        except ApiError as exc:
+            if exc.status_code != 409:
+                raise
+
     async def post_message(self, room_id: str, content: str, mention_slug: str) -> str:
         """Post a message that @mentions one agent (by slug). Returns the message id."""
-        agent = settings.band_agents[mention_slug]
+        agent = settings.band_agents.get(mention_slug)
+        if agent is None and mention_slug == "quinn":
+            agent = settings.quinn
+        if agent is None:
+            raise KeyError(f"Unknown mention slug: {mention_slug!r}")
         resp = await self.client.agent_api_messages.create_agent_chat_message(
             room_id,
             message=ChatMessageRequest(

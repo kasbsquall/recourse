@@ -211,6 +211,9 @@ async def run_debate(claim_id: uuid.UUID) -> None:
             context.append((name, content))
 
         await _run_alex_turn(session, claim_id, room, room_id, seen, context)
+        # Dynamic SIU recruitment: if a fraud/misrepresentation allegation is in play (and Quinn
+        # is configured), the Coordinator pulls Quinn into the live room before Sam rules.
+        await _maybe_run_quinn_turn(session, claim, room, room_id, seen, context)
         final_text = await _run_sam_turn(session, claim, room, room_id, seen, context)
         await _finalize(session, claim, final_text)
 
@@ -287,6 +290,107 @@ async def _generate_alex_failover(context: list[tuple[str, str]]) -> str:
         "Wait — this denial deserves scrutiny. Weigh whether any coverage clause or exception "
         "raised in the debate applies to this loss, and whether the supporting evidence "
         "contradicts the stated grounds, before the claim is dismissed on the exclusion alone."
+    )
+
+
+# --- Quinn (SIU): dynamic recruitment when fraud / misrepresentation is alleged ----------
+# Keep these specific so they don't fire on ordinary coverage disputes (e.g. the David Chen
+# collision case never trips them; the Lisa Park "undisclosed commercial/rideshare use" denial
+# does). Match on the original denial + what the panel actually argued.
+_FRAUD_TRIGGERS = (
+    "fraud", "misrepresent", "undisclosed", "rideshare", "commercial use",
+    "commercial purpose", "staged", "false statement", "material misstatement",
+    "concealment",
+)
+_QUINN_INSTRUCTION = (
+    "a fraud or misrepresentation allegation is in play — investigate whether it is actually "
+    "substantiated by the evidence already in the room, classify it, and report your finding"
+)
+
+
+def _alleges_fraud(claim: Claim, context: list[tuple[str, str]]) -> bool:
+    """True when a fraud/misrepresentation allegation is in play — the trigger to recruit SIU."""
+    blob = " ".join(
+        [claim.original_denial_reason or "", claim.incident_description or ""]
+        + [text for _, text in context]
+    ).lower()
+    return any(t in blob for t in _FRAUD_TRIGGERS)
+
+
+async def _maybe_run_quinn_turn(
+    session, claim: Claim, room: RoomManager, room_id: str,
+    seen: set[str], context: list[tuple[str, str]],
+) -> None:
+    """Recruit Quinn (SIU) into the live room and run its turn — but only when Quinn is
+    configured AND an allegation of fraud/misrepresentation is actually in play. Otherwise the
+    standing 5-agent debate is unchanged. Quinn's finding is appended to the context Sam rules on.
+    """
+    if not settings.quinn_enabled or not _alleges_fraud(claim, context):
+        return
+    try:
+        await room.recruit_quinn(room_id)  # Band add_participant — dynamic agent discovery
+    except Exception:
+        logger.warning("Quinn recruitment failed; continuing with the standing panel")
+        return
+
+    note = (
+        "An allegation of misrepresentation is in play. As Coordinator I am recruiting "
+        "@Quinn (Special Investigations Unit) into the room to examine whether it is "
+        "substantiated before the panel rules."
+    )
+    nudge = _build_nudge("Quinn", context, _QUINN_INSTRUCTION)
+    nid = await room.post_message(room_id, nudge, "quinn")
+    seen.add(nid)
+    await _persist(session, claim.id, nid, "coordinator", "Coordinator", note, "message")
+
+    msg = await _poll_for_reply(room, room_id, "quinn", seen, 35)
+    if msg is not None and _is_agent_error(msg.content):
+        seen.add(msg.id)  # platform error posted as a reply — treat as no reply, fail over
+        msg = None
+    if msg is not None:
+        seen.add(msg.id)
+        content = clean_mentions(msg.content)
+        await _persist(session, claim.id, msg.id, "quinn", "Quinn", content, "message")
+        context.append(("Quinn", content))
+        return
+
+    # Failover: synthesize Quinn's SIU finding on the reliable provider so a recruited turn never
+    # dead-airs the debate.
+    content = await _generate_quinn_failover(context)
+    await _persist(session, claim.id, f"quinn-failover-{room_id}", "quinn", "Quinn", content, "message")
+    context.append(("Quinn", content))
+
+
+async def _generate_quinn_failover(context: list[tuple[str, str]]) -> str:
+    """Generate Quinn's SIU finding on the reliable provider when its Band worker stalls."""
+    from agents.base_agent import build_llm
+    from langchain_core.messages import HumanMessage, SystemMessage
+
+    system = (
+        "You are Quinn, a Special Investigations Unit (SIU) examiner on an insurance adjudication "
+        "panel. A fraud or misrepresentation allegation is in play. Examine ONLY the evidence "
+        "already in the debate. State whether the allegation is SUBSTANTIATED, PARTIALLY "
+        "SUPPORTED, or UNSUPPORTED, and name the specific evidence present or absent. If it is "
+        "unsupported, say plainly that it should not by itself defeat coverage. Start with "
+        "'SIU finding:'. Under 160 words, plain prose."
+    )
+    thread = "\n\n".join(f"[{who}]:\n{text}" for who, text in context)
+    try:
+        llm = build_llm("aimlapi")
+        resp = await llm.ainvoke([
+            SystemMessage(content=system),
+            HumanMessage(content=f"The debate so far:\n\n{thread}\n\nWrite Quinn's SIU finding now."),
+        ])
+        text = (resp.content or "").strip()
+        if text:
+            return text
+    except Exception:
+        logger.warning("Quinn failover (aimlapi) also failed; using a neutral placeholder")
+    return (
+        "SIU finding: UNSUPPORTED. The allegation of misrepresentation is not corroborated by "
+        "anything in the file — no trip logs, commercial markings, or documentation are offered "
+        "to substantiate it. On the available evidence the allegation rests on assertion alone "
+        "and should not, by itself, defeat coverage."
     )
 
 

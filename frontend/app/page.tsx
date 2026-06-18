@@ -193,6 +193,53 @@ function ClaimsDocket({ claims, err }: { claims: Claim[] | null; err: string | n
   );
 }
 
+/** A "start here" callout for hackathon judges: one click to a finished verdict (instant),
+ *  one to a live run. Data-driven — picks the first resolved case and the first pending case. */
+function JudgeBanner({ claims }: { claims: Claim[] | null }) {
+  if (!claims || claims.length === 0) return null;
+  const done = claims.find((c) => RESOLVED.includes(c.status));
+  const open = claims.find((c) => c.status === "pending");
+  if (!done && !open) return null;
+  return (
+    <div className="brut mb-9 p-5" style={{ background: "var(--signal)", boxShadow: "var(--shadow-lg)" }}>
+      <div className="uppercase-mono flex items-center gap-2 text-[11px] font-bold">
+        <span className="flash h-2.5 w-2.5" style={{ background: "var(--ink)" }} />
+        Judges — try it in 30 seconds
+      </div>
+      <div className="mt-3 grid gap-3 sm:grid-cols-2">
+        {done && (
+          <Link
+            href={`/claims/${done.id}`}
+            className="brut-hover block p-4"
+            style={{ background: "var(--paper)", border: "2.5px solid var(--ink)" }}
+          >
+            <div className="font-display text-lg uppercase tracking-tight">📄 See a finished verdict</div>
+            <div className="mt-1 text-[13px] leading-snug text-[var(--muted)]">
+              Open <b className="text-[var(--ink)]">{done.insured_name ?? done.claim_number}</b> — a
+              completed adjudication: the full agent debate, the signed resolution, and a
+              one-click tamper-evident record. <b className="text-[var(--ink)]">Instant.</b>
+            </div>
+          </Link>
+        )}
+        {open && (
+          <Link
+            href={`/claims/${open.id}`}
+            className="brut-hover block p-4"
+            style={{ background: "var(--paper)", border: "2.5px solid var(--ink)" }}
+          >
+            <div className="font-display text-lg uppercase tracking-tight">▶ Run one live yourself</div>
+            <div className="mt-1 text-[13px] leading-snug text-[var(--muted)]">
+              Open <b className="text-[var(--ink)]">{open.insured_name ?? open.claim_number}</b> → click{" "}
+              <b className="text-[var(--ink)]">“Open Adjudication Room”</b> and watch the agents debate
+              it live through Band (~90s). A real run, not a recording.
+            </div>
+          </Link>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function Dashboard() {
   const [claims, setClaims] = useState<Claim[] | null>(null);
   const [err, setErr] = useState<string | null>(null);
@@ -229,6 +276,9 @@ export default function Dashboard() {
       <SiteHeader />
 
       <div className="mx-auto max-w-6xl px-6 py-10">
+        {/* JUDGES — start here */}
+        <JudgeBanner claims={claims} />
+
         {/* HERO */}
         <section className="grid items-end gap-8 lg:grid-cols-[1.4fr_1fr]">
           <div>

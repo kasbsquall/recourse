@@ -250,14 +250,36 @@ async def revise(
 
 @app.get("/api/claims/{claim_id}/audit")
 async def export_audit(claim_id: uuid.UUID, session: AsyncSession = Depends(get_session)):
-    """Export the full audit trail (claim + debate transcript + resolution) as JSON."""
+    """Export the full audit trail (claim + debate transcript + resolution) as JSON.
+
+    Includes the claim financials so a downloaded record can show the deterministic payout math
+    (payable = amount requested − deductible) without a second request.
+    """
+    from datetime import datetime, timezone
+
     claim = await _load_claim_detail(session, claim_id)
     claim.messages.sort(key=lambda m: m.sent_at or claim.created_at)
+    policy = claim.policy
+    deductible = float(policy.deductible) if policy and policy.deductible is not None else None
+    requested = float(claim.amount_requested) if claim.amount_requested is not None else None
     return {
         "claim_number": claim.claim_number,
         "status": claim.status,
         "band_room_id": claim.band_room_id,
-        "policy_number": claim.policy.policy_number if claim.policy else None,
+        "policy_number": policy.policy_number if policy else None,
+        "insured_name": policy.insured_name if policy else None,
+        "insurance_company": policy.insurance_company if policy else None,
+        "incident_type": claim.incident_type,
+        "incident_date": claim.incident_date.isoformat() if claim.incident_date else None,
+        "location": claim.location,
+        "amount_requested": requested,
+        "deductible": deductible,
+        "payable_if_covered": (
+            max(requested - deductible, 0.0)
+            if requested is not None and deductible is not None
+            else None
+        ),
+        "generated_at": datetime.now(timezone.utc).isoformat(),
         "transcript": [
             {
                 "agent": m.agent_display_name,

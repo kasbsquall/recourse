@@ -15,11 +15,14 @@ Ctrl+C stops all of them.
 import subprocess
 import sys
 
+from config import settings
+
 _MODULES = {
     "blake": "agents.blake_claims_evaluator",
     "morgan": "agents.morgan_policy_analyst",
     "alex": "agents.alex_devils_advocate",
     "sam": "agents.sam_resolution_notary",
+    "quinn": "agents.quinn_siu_investigator",  # SIU — dynamically recruited when fraud is alleged
 }
 
 
@@ -45,7 +48,12 @@ def main(slugs: list[str]) -> None:
 
 
 if __name__ == "__main__":
-    requested = [s.lower() for s in sys.argv[1:]] or list(_MODULES)
+    requested = [s.lower() for s in sys.argv[1:]]
+    if not requested:
+        # Default: the standing 4-agent panel, plus Quinn (SIU) only when it's configured.
+        requested = ["blake", "morgan", "alex", "sam"]
+        if settings.quinn_enabled:
+            requested.append("quinn")
     unknown = [s for s in requested if s not in _MODULES]
     if unknown:
         sys.exit(f"Unknown agent(s): {unknown}. Choose from {list(_MODULES)}")

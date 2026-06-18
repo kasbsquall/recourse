@@ -25,6 +25,11 @@ _coordinator = settings.coordinator
 if _coordinator["agent_id"]:
     _AGENT_BY_ID[_coordinator["agent_id"]] = ("coordinator", _coordinator["name"])
 
+# Quinn (SIU) — the 6th, dynamically-recruited agent. Only present when configured.
+_quinn = settings.quinn
+if _quinn["agent_id"]:
+    _AGENT_BY_ID[_quinn["agent_id"]] = ("quinn", _quinn["name"])
+
 # uuid -> @Name, to turn Band's `@[[uuid]]` mention encoding into readable handles.
 _NAME_BY_ID = {aid: name for aid, (slug, name) in _AGENT_BY_ID.items()}
 _MENTION_RE = re.compile(r"@\[\[([0-9a-fA-F-]+)\]\]")

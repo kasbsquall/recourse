@@ -89,6 +89,8 @@ def create_band_agent(
     `tools` are LangChain tools the agent may call (e.g. Morgan's clause search).
     """
     cfg = settings.band_agents.get(slug)
+    if cfg is None and slug == "quinn":
+        cfg = settings.quinn  # the 6th, dynamically-recruited SIU agent
     if cfg is None:
         raise ValueError(f"Unknown agent slug: {slug!r}")
     if not cfg["agent_id"] or not cfg["api_key"]:
@@ -126,5 +128,6 @@ async def run_agent(slug: str, system_prompt: str, tools: list[Any] | None = Non
 
         print(f"[{slug}] warming embedding model (clause search) ...")
         await asyncio.to_thread(warm_up)
-    print(f"[{slug}] connecting to Band as {settings.band_agents[slug]['handle']} ...")
+    handle = (settings.band_agents.get(slug) or settings.quinn)["handle"]
+    print(f"[{slug}] connecting to Band as {handle} ...")
     await agent.run()

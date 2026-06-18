@@ -86,27 +86,59 @@ export default function ResolutionPanel({
         )
         .join("");
       const r = a.resolution ?? {};
+      const fmt = (v: number | null | undefined) =>
+        v == null ? "—" : `$${Number(v).toLocaleString("en-US", { minimumFractionDigits: 2 })}`;
+      const ov = r.audit_trail?.officer_override as { by?: string; reason?: string; at?: string } | undefined;
+      const sha = (r.audit_trail && r.audit_trail.transcript_sha256) || "—";
+      const sig = ov
+        ? `Panel recommendation <b>OVERRIDDEN &amp; DENIED</b> by ${esc(ov.by ?? "officer")}${ov.at ? " · " + esc(ov.at) : ""}${ov.reason ? `<br><i>Reason: ${esc(ov.reason)}</i>` : ""}`
+        : r.approved_by
+          ? `Reviewed, approved &amp; <b>signed</b> by ${esc(r.approved_by)}${r.approved_at ? " · " + esc(r.approved_at) : ""}`
+          : "Pending human officer sign-off";
       const w = window.open("", "_blank");
       if (!w) return;
       w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>Adjudication Record — ${a.claim_number}</title>
 <style>
-  body{font-family:Georgia,serif;color:#0e0e0e;max-width:760px;margin:40px auto;padding:0 24px;line-height:1.5}
-  h1{font-size:30px;margin:0;letter-spacing:-.02em}.sub{font-family:monospace;font-size:12px;color:#555;margin:4px 0 20px}
-  .verdict{border:3px solid #0e0e0e;padding:14px 18px;margin:18px 0;font-size:22px;font-weight:bold}
+  body{font-family:Georgia,serif;color:#0e0e0e;max-width:760px;margin:36px auto;padding:0 24px;line-height:1.5}
+  .brand{font-family:'Arial Black',Arial,sans-serif;font-weight:900;letter-spacing:-.03em;font-size:13px}
+  .rule{height:6px;background:#0e0e0e;margin:6px 0 2px}
+  h1{font-size:30px;margin:14px 0 0;letter-spacing:-.02em}
+  .sub{font-family:monospace;font-size:12px;color:#555;margin:4px 0 18px}
+  .grid{font-family:monospace;font-size:12px;border:2px solid #0e0e0e;padding:10px 14px;margin:14px 0;line-height:1.7}
+  .grid b{display:inline-block;min-width:130px;color:#555;font-weight:normal}
+  .verdict{border:3px solid #0e0e0e;padding:14px 18px;margin:18px 0;font-size:23px;font-weight:bold;background:#f5d90a22}
+  .math{font-family:monospace;font-size:13px;border-left:5px solid #f5d90a;padding:6px 0 6px 12px;margin:12px 0}
   .turn{border-left:3px solid #0e0e0e;padding:4px 0 10px 12px;margin:10px 0}
   .who{font-family:monospace;text-transform:uppercase;font-size:11px;font-weight:bold;letter-spacing:.06em}
   .body{font-size:14px;white-space:normal}
+  .sigbox{border:2px solid #0e0e0e;padding:12px 16px;margin-top:14px;font-size:14px}
   .meta{font-family:monospace;font-size:11px;color:#555;border-top:1px solid #ccc;margin-top:24px;padding-top:12px;word-break:break-all}
   h2{font-size:13px;text-transform:uppercase;letter-spacing:.08em;font-family:monospace;margin-top:26px}
 </style></head><body>
+  <div class="brand">RECOURSE — ADVERSARIAL CLAIMS ADJUDICATION</div>
+  <div class="rule"></div>
   <h1>Adjudication Record</h1>
-  <div class="sub">RECOURSE · Crestview Mutual · Claim ${a.claim_number} · status: ${a.status}</div>
-  <div class="verdict">${r.decision ?? "—"}${r.approved_amount != null ? " · $" + Number(r.approved_amount).toLocaleString("en-US", { minimumFractionDigits: 2 }) : ""}</div>
+  <div class="sub">Tamper-evident · machine-verifiable · regulator-filable · generated ${esc(a.generated_at ?? "")}</div>
+  <div class="grid">
+    <b>Insurer</b> ${esc(a.insurance_company ?? "—")}<br>
+    <b>Insured</b> ${esc(a.insured_name ?? "—")}<br>
+    <b>Claim</b> ${esc(a.claim_number)} &nbsp;·&nbsp; <b style="min-width:0">Policy</b> ${esc(a.policy_number ?? "—")}<br>
+    <b>Incident</b> ${esc(a.incident_type ?? "—")} on ${esc(a.incident_date ?? "—")}${a.location ? " · " + esc(a.location) : ""}<br>
+    <b>Status</b> ${esc(a.status)}
+  </div>
+  <div class="verdict">${r.decision ?? "—"}${r.approved_amount != null ? " · " + fmt(r.approved_amount) : ""}</div>
+  <div class="math">Amount requested ${fmt(a.amount_requested)} − Deductible ${fmt(a.deductible)} = <b>Payable if covered ${fmt(a.payable_if_covered)}</b></div>
+  <h2>Legal reasoning</h2>
   <p>${esc(r.legal_reasoning).replace(/\n/g, "<br>")}</p>
   <h2>Cited clauses</h2><p>${(r.cited_clauses ?? []).map(esc).join(" · ") || "—"}</p>
-  <h2>Adjudication transcript (Band room)</h2>${rows}
-  <h2>Signature</h2><p>${r.approved_by ? "Approved by " + esc(r.approved_by) + (r.approved_at ? " · " + esc(r.approved_at) : "") : "Pending human approval"}</p>
-  <div class="meta">Band room: ${a.band_room_id ?? "—"}<br>Tamper-evident hash (sha256): ${(r.audit_trail && r.audit_trail.transcript_sha256) || "—"}</div>
+  <h2>Adjudication transcript — full debate (Band room)</h2>${rows}
+  <h2>Human officer sign-off</h2>
+  <div class="sigbox">${sig}</div>
+  <div class="meta">
+    Band room: ${esc(a.band_room_id ?? "—")}<br>
+    Tamper-evident transcript hash (SHA-256): ${esc(sha)}<br>
+    Any edit to the recorded debate${r.audit_trail?.message_count ? ` (${esc(String(r.audit_trail.message_count))} messages)` : ""} changes this hash — the record is self-verifying.
+  </div>
 </body></html>`);
       w.document.close();
       w.focus();
@@ -276,7 +308,7 @@ export default function ResolutionPanel({
             className="brut-hover uppercase-mono px-5 py-3 text-sm font-bold"
             style={{ background: "var(--signal)", border: "2.5px solid var(--ink)", boxShadow: "var(--shadow)" }}
           >
-            📄 Print Record
+            ⤓ Download Signed Record
           </button>
           <a
             href={auditUrl(claimId)}

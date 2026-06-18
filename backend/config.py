@@ -43,6 +43,15 @@ class Settings(BaseSettings):
     band_coordinator_api_key: str = ""
     band_coordinator_handle: str = ""
 
+    # Quinn — the 6th agent (Special Investigations Unit). NOT a standing panelist: the
+    # Coordinator dynamically RECRUITS Quinn into the room mid-debate (add_participant) ONLY
+    # when fraud / misrepresentation / a material inconsistency is alleged — demonstrating
+    # Band's dynamic agent discovery. Feature-flagged: if these are unset, the debate runs
+    # exactly as before (the standing 5-agent panel), so it is safe to deploy unconfigured.
+    band_quinn_agent_id: str = ""
+    band_quinn_api_key: str = ""
+    band_quinn_handle: str = ""
+
     # AI/ML API (Blake + Morgan)
     aimlapi_api_key: str = ""
     aimlapi_base_url: str = "https://api.aimlapi.com/v1"
@@ -104,6 +113,27 @@ class Settings(BaseSettings):
             "api_key": self.band_coordinator_api_key,
             "handle": self.band_coordinator_handle,
         }
+
+    @property
+    def quinn(self) -> dict:
+        """The 6th agent (SIU). Dynamically recruited mid-debate when fraud is alleged."""
+        return {
+            "name": "Quinn", "role": "Special Investigations Unit", "slug": "quinn",
+            "agent_id": self.band_quinn_agent_id,
+            "api_key": self.band_quinn_api_key,
+            "handle": self.band_quinn_handle,
+            "provider": "aimlapi",
+        }
+
+    @property
+    def quinn_enabled(self) -> bool:
+        """True only when Quinn's Band identity is fully configured. When False, the debate
+        runs as the standing 5-agent panel (no dynamic recruitment) — safe default."""
+        return bool(
+            self.band_quinn_agent_id
+            and self.band_quinn_api_key
+            and self.band_quinn_handle
+        )
 
     @property
     def orchestrator(self) -> dict:

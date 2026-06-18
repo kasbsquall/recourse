@@ -9,8 +9,9 @@ Run from the backend/ directory:
 from __future__ import annotations
 
 import asyncio
+import hashlib
 import sys
-from datetime import date
+from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal
 from pathlib import Path
 
@@ -20,7 +21,13 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from sqlalchemy import text  # noqa: E402
 
 from database.connection import AsyncSessionLocal, engine  # noqa: E402
-from database.models import Claim, Policy, PolicyClause  # noqa: E402
+from database.models import (  # noqa: E402
+    AgentMessage,
+    Claim,
+    Policy,
+    PolicyClause,
+    Resolution,
+)
 from services.rag_service import embed_batch  # noqa: E402
 
 SCHEMA_FILE = Path(__file__).resolve().parent / "schema.sql"
@@ -119,6 +126,120 @@ SUPPORTING_DOCS = [
 ]
 
 
+# --- David Chen: a CLOSED case, pre-adjudicated & officer-ratified ---------------
+# Seeded with the full debate + signed resolution so a judge opening it sees a complete,
+# tamper-evident verdict the instant the page loads (no 1-2 min live wait). Lisa Park stays
+# PENDING (an "open" case) for a live run that also showcases dynamic SIU recruitment.
+DAVID_ROOM_ID = "rm_dc_adjudicated_0001"
+
+DAVID_RESOLUTION_TEXT = (
+    "DECISION: APPROVED\n"
+    "APPROVED AMOUNT: $12,000.00\n\n"
+    "LEGAL REASONING:\n"
+    "The claim is approved based on the exception in §12.1, which allows coverage of "
+    "mechanical failures directly and proximately caused by a covered collision event. The "
+    "certified mechanic report BM-AUTO-2024-089 and police report FHP-2024-10153 confirm the "
+    "engine seizure resulted from collision impact, not a pre-existing issue — negating the "
+    "application of §7.3 (Mechanical Failure Exclusion).\n\n"
+    "DEBATE SUMMARY:\n"
+    "- Blake: Coverage analysis was initially unclear (~60% confidence) given the potential "
+    "applicability of §7.3.\n"
+    "- Morgan: Asserted that §7.3 does not apply because the §12.1 exception controls, "
+    "supporting coverage.\n"
+    "- Alex: Argued the denial overlooked §12.1 and advocated for approval on the evidence.\n\n"
+    "CONFIDENCE: HIGH\n"
+    "RECOMMENDATION TO CLAIMS OFFICER: Approve the claim for $12,000.00 — the evidence and "
+    "policy language support coverage under the collision clause."
+)
+
+# (slug, display_name, message_type, content) — ordered debate transcript.
+DAVID_DEBATE: list[tuple[str, str, str, str]] = [
+    (
+        "coordinator", "Coordinator", "case_file",
+        "CASE FILE — Claim CLM-2024-04471 (Policy CPP-2024-8821, David Chen, Crestview Mutual "
+        "Insurance)\nIncident: collision on 2024-10-15 at I-95 North, near Fort Lauderdale, FL.\n"
+        "Vehicle struck guardrail at ~35 mph; airbags deployed; front-end and engine compartment "
+        "sustained severe damage; engine seized following impact. Police report FHP-2024-10153 "
+        "documents the accident; a witness confirms the vehicle lost control on guardrail contact "
+        "before the engine ceased operation.\nAmount requested: $12,500.00.\n"
+        "ORIGINAL DENIAL: denied per §7.3 — Mechanical Failure Exclusion; adjuster alleges "
+        "mechanical failure preceded the collision.\nSupporting documents: FHP-2024-10153 "
+        "(police report), BM-AUTO-2024-089 (certified mechanic report), CLM-2024-04471-imgs "
+        "(photos).\n\nThis denial is disputed. @Blake, begin your coverage analysis.",
+    ),
+    (
+        "blake", "Blake", "message",
+        "This is a covered collision under §2.1 — direct physical damage from contact with the "
+        "guardrail. The denial rests entirely on §7.3, but the sequence matters: the engine "
+        "seized FOLLOWING the impact, not before it. The mechanic report (BM-AUTO-2024-089) "
+        "attributes the seizure to catastrophic impact damage to the oil pan and crankshaft — "
+        "consistent with a high-force collision, not pre-existing wear. My confidence that "
+        "coverage applies is moderate (~60%) pending the exact reading of §7.3 against any "
+        "collision-caused-failure carve-out. Handing off to @Morgan for the controlling clauses.",
+    ),
+    (
+        "morgan", "Morgan", "message",
+        "§7.3 excludes mechanical or electrical failure. BUT §12.1 — the Collision-Caused "
+        "Mechanical Failure Exception — states that, notwithstanding §7.3, mechanical failure "
+        "directly and proximately caused by a covered collision event, as evidenced by police "
+        "report, adjuster assessment, or certified mechanic report, SHALL be eligible under §2.1. "
+        "Here both FHP-2024-10153 and BM-AUTO-2024-089 establish the seizure was collision-caused. "
+        "§12.1 controls and restores coverage; the denial cited §7.3 in isolation and overlooked "
+        "§12.1. @Alex, pressure-test this.",
+    ),
+    (
+        "alex", "Alex", "message",
+        "Wait — before we approve, the burden is on the evidence, and here it holds. The denial "
+        "overlooked §12.1, the exception that decides this. The mechanic and police reports both "
+        "confirm the seizure was caused by collision impact, not pre-existing wear — exactly the "
+        "trigger §12.1 requires. The photos (CLM-2024-04471-imgs) show front-end crushing "
+        "consistent with a 35 mph guardrail impact, corroborating the witness. Nothing in the file "
+        "shows prior mechanical issues. The denial leaned on §7.3 alone and ignored the controlling "
+        "exception. Approve under §12.1, less the deductible.",
+    ),
+    (
+        "coordinator", "Coordinator", "message",
+        "Debate complete. Compiling the full record and routing it to @Sam for the binding "
+        "resolution. (Claim $12,500.00 · deductible $500.00 · payable in full $12,000.00.)",
+    ),
+    ("sam", "Sam", "resolution", DAVID_RESOLUTION_TEXT),
+]
+
+
+def _attach_completed_debate(claim: Claim) -> None:
+    """Pre-populate a claim as a fully-adjudicated, officer-ratified (CLOSED) case: the ordered
+    debate transcript, the SHA-256 tamper-evident hash over it, and the signed resolution. Lets a
+    judge see a complete verdict instantly; the live debate path is untouched."""
+    base = datetime(2025, 11, 3, 15, 35, 0, tzinfo=timezone.utc)
+    messages = [
+        AgentMessage(
+            agent_slug=slug,
+            agent_display_name=name,
+            message_type=mtype,
+            content=content,
+            sent_at=base + timedelta(seconds=i * 8),
+        )
+        for i, (slug, name, mtype, content) in enumerate(DAVID_DEBATE)
+    ]
+    claim.messages = messages
+    blob = "\n".join(f"{m.agent_slug}:{m.content}" for m in messages)
+    sha = hashlib.sha256(blob.encode("utf-8")).hexdigest()
+    claim.resolution = Resolution(
+        decision="APPROVED",
+        approved_amount=Decimal("12000.00"),
+        legal_reasoning=DAVID_RESOLUTION_TEXT,
+        cited_clauses=["§7.3", "§12.1"],
+        audit_trail={
+            "room_id": DAVID_ROOM_ID,
+            "transcript_sha256": sha,
+            "message_count": len(messages),
+            "hash_algorithm": "sha256",
+        },
+        approved_by="Kevin Soto (Claims Officer)",
+        approved_at=base + timedelta(minutes=3),
+    )
+
+
 async def apply_schema() -> None:
     """Run schema.sql statement-by-statement (asyncpg can't batch-execute)."""
     sql = SCHEMA_FILE.read_text(encoding="utf-8")
@@ -169,28 +290,29 @@ async def seed() -> None:
             )
             for c, emb in zip(CLAUSES, embeddings)
         ]
-        david_policy.claims = [
-            Claim(
-                claim_number="CLM-2024-04471",
-                incident_date=date(2024, 10, 15),
-                incident_type="collision",
-                location="I-95 North, near Fort Lauderdale, FL",
-                amount_requested=Decimal("12500.00"),
-                status="pending",
-                original_denial_reason=(
-                    "Claim denied per §7.3 — Mechanical Failure Exclusion. Adjuster "
-                    "assessment indicates mechanical failure preceded collision event."
-                ),
-                incident_description=(
-                    "Vehicle struck guardrail at approximately 35 mph. Airbags deployed. "
-                    "Front-end and engine compartment sustained severe damage. Engine "
-                    "seized following impact. Police report FHP-2024-10153 documents the "
-                    "accident. Witness statement from Marcus T. (FHP report page 2) confirms "
-                    "vehicle lost control upon guardrail contact before engine ceased operation."
-                ),
-                supporting_docs=SUPPORTING_DOCS,
-            )
-        ]
+        david_claim = Claim(
+            claim_number="CLM-2024-04471",
+            incident_date=date(2024, 10, 15),
+            incident_type="collision",
+            location="I-95 North, near Fort Lauderdale, FL",
+            amount_requested=Decimal("12500.00"),
+            status="approved",  # CLOSED — already adjudicated & officer-ratified (instant view)
+            band_room_id=DAVID_ROOM_ID,
+            original_denial_reason=(
+                "Claim denied per §7.3 — Mechanical Failure Exclusion. Adjuster "
+                "assessment indicates mechanical failure preceded collision event."
+            ),
+            incident_description=(
+                "Vehicle struck guardrail at approximately 35 mph. Airbags deployed. "
+                "Front-end and engine compartment sustained severe damage. Engine "
+                "seized following impact. Police report FHP-2024-10153 documents the "
+                "accident. Witness statement from Marcus T. (FHP report page 2) confirms "
+                "vehicle lost control upon guardrail contact before engine ceased operation."
+            ),
+            supporting_docs=SUPPORTING_DOCS,
+        )
+        _attach_completed_debate(david_claim)  # full transcript + signed resolution
+        david_policy.claims = [david_claim]
         session.add(david_policy)
 
         # --- Second disputed case: Lisa Park (theft denied over an alleged commercial-use
@@ -261,7 +383,10 @@ async def seed() -> None:
         session.add(lisa_policy)
 
         await session.commit()
-        print("  inserted: 2 policies, 12 clauses, 2 pending claims")
+        print(
+            "  inserted: 2 policies, 12 clauses, "
+            "1 CLOSED case (David Chen, approved+signed) + 1 OPEN case (Lisa Park, pending)"
+        )
 
 
 async def main() -> None:
