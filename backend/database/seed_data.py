@@ -197,9 +197,9 @@ MARCUS_DEBATE: list[tuple[str, str, str, str]] = [
     ),
     (
         "coordinator", "Coordinator", "message",
-        "An allegation of a staged/misrepresented loss is in play and turns on evidence, not "
-        "argument. Recruiting @Quinn (Special Investigations Unit) into the room to examine whether "
-        "the misrepresentation allegation is substantiated before the panel rules.",
+        "An allegation of a **staged/misrepresented loss** is in play and turns on evidence, not "
+        "argument. **Recruiting** @Quinn (Special Investigations Unit) into the room to examine "
+        "whether the allegation is substantiated before the panel rules.",
     ),
     (
         "quinn", "Quinn", "message",

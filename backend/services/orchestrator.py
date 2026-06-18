@@ -334,7 +334,7 @@ async def _maybe_run_quinn_turn(
         return
 
     note = (
-        "An allegation of misrepresentation is in play. As Coordinator I am recruiting "
+        "An allegation of **misrepresentation** is in play. As Coordinator I am **recruiting** "
         "@Quinn (Special Investigations Unit) into the room to examine whether it is "
         "substantiated before the panel rules."
     )
