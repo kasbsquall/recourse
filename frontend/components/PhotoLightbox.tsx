@@ -66,11 +66,15 @@ export default function PhotoLightbox({
         role="dialog"
         aria-modal="true"
         aria-labelledby="lightbox-title"
+        aria-describedby="lightbox-desc"
         tabIndex={-1}
         className="brut flex max-h-[90vh] w-full max-w-3xl flex-col overflow-hidden bg-[var(--paper)] focus:outline-none"
         style={{ boxShadow: "var(--shadow-lg)" }}
         onClick={(e) => e.stopPropagation()}
       >
+        <span id="lightbox-desc" className="sr-only">
+          Use the left and right arrow keys to browse photos. Press Escape to close.
+        </span>
         <div className="flex items-center justify-between border-b-[2.5px] border-[var(--ink)] bg-[var(--ink)] px-4 py-2">
           <span id="lightbox-title" className="uppercase-mono text-[11px] font-bold text-[var(--bg)]">
             Evidence photo {i + 1} / {photos.length}

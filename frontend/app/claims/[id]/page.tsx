@@ -201,7 +201,7 @@ export default function ClaimRoom() {
                           >
                             {d.images.map((img, i) => (
                               <button
-                                key={img.src}
+                                key={`${d.ref}-${i}`}
                                 onClick={() => setLightbox({ photos: d.images!, index: i })}
                                 className="brut-hover overflow-hidden"
                                 style={{ border: "2px solid var(--ink)", aspectRatio: "4 / 3" }}
